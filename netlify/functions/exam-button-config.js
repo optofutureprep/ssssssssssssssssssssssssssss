@@ -28,6 +28,12 @@ const STATIC_BUTTON_CONFIG = {
     useImage: true,
     hidden: false,
   },
+  'mark-active': {
+    image: null,
+    useCustom: false,
+    useImage: true,
+    hidden: false,
+  },
   review: {
     image: SUPRAS_BUTTON_IMAGE,
     useCustom: true,
