@@ -74,75 +74,16 @@ const STATIC_BUTTON_CONFIG = {
 };
 
 exports.handler = async function handler(event, context) {
-  return new Promise((resolve) => {
-    try {
-      const targetUrl = new URL(REMOTE_EXAM_BUTTON_ENDPOINT);
-      const options = {
-        hostname: targetUrl.hostname,
-        path: `${targetUrl.pathname}${targetUrl.search}`,
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-        },
-      };
-
-      const req = https.request(options, (res) => {
-        let data = '';
-
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-
-        res.on('end', () => {
-          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({
-              statusCode: 200,
-              headers: {
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-store',
-              },
-              body: data,
-            });
-          } else {
-            console.error('Failed to fetch SUPRAS config in Netlify function:', res.statusCode);
-            // Fallback to static SUPRAS-style config so buttons remain branded
-            resolve({
-              statusCode: 200,
-              headers: {
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-store',
-              },
-              body: JSON.stringify(STATIC_BUTTON_CONFIG),
-            });
-          }
-        });
-      });
-
-      req.on('error', (err) => {
-        console.error('Error in Netlify exam-button-config function:', err);
-        // Network error -> still return static SUPRAS-style config
-        resolve({
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-store',
-          },
-          body: JSON.stringify(STATIC_BUTTON_CONFIG),
-        });
-      });
-
-      req.end();
-    } catch (error) {
-      console.error('Unexpected Netlify function error:', error);
-      // Any other error -> still respond with static config so frontend works
-      resolve({
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store',
-        },
-        body: JSON.stringify(STATIC_BUTTON_CONFIG),
-      });
-    }
-  });
+  // Always return the static SUPRAS-style config. This makes the
+  // frontend independent of the remote SUPRAS API and guarantees
+  // that all buttons (test + review + highlight) use the same
+  // SUPRAS skin consistently in production.
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+    },
+    body: JSON.stringify(STATIC_BUTTON_CONFIG),
+  };
 };
