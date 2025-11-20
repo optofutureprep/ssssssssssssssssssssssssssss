@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstantDB Integration Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root" class="min-h-screen p-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-4">InstantDB Integration Demo</h1>
+                <p class="text-gray-600 mb-6">
+                    This demo shows how InstantDB would work with your app. Currently showing a mock integration
+                    because InstantDB requires a build system (npm/webpack/vite).
+                </p>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start">
+                        <svg class="w-6 h-6 text-yellow-600 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <h3 class="text-sm font-semibold text-yellow-800 mb-1">Setup Required</h3>
+                            <p class="text-sm text-yellow-700 mb-2">
+                                To use InstantDB, you need to run: <code class="bg-yellow-100 px-2 py-1 rounded">npm install @instantdb/react</code>
+                            </p>
+                            <p class="text-xs text-yellow-600">
+                                Then set up a build system (Vite, Webpack, or Next.js) to bundle the modules.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="demo-root"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        
+        function InstantDBDemo() {
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [showAuthModal, setShowAuthModal] = useState(false);
+            const [testAttempts, setTestAttempts] = useState([]);
+            
+            const mockSignIn = () => {
+                setIsAuthenticated(true);
+                setShowAuthModal(false);
+                // Simulate loading test attempts
+                setTestAttempts([
+                    { id: 1, subject: 'Biology', testIndex: 0, score: 85, date: new Date().toISOString() },
+                    { id: 2, subject: 'Chemistry', testIndex: 1, score: 92, date: new Date().toISOString() },
+                ]);
+            };
+            
+            const mockSignOut = () => {
+                setIsAuthenticated(false);
+                setTestAttempts([]);
+            };
+            
+            return (
+                <div>
+                    {/* Auth Status */}
+                    <div className="mb-6">
+                        {isAuthenticated ? (
+                            <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                    <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                    <div>
+                                        <div className="font-medium text-green-900">Signed In</div>
+                                        <div className="text-sm text-green-700">user@example.com</div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={mockSignOut}
+                                    className="px-4 py-2 bg-white border border-green-300 text-green-700 rounded hover:bg-green-50"
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                    <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+                                    </svg>
+                                    <div>
+                                        <div className="font-medium text-blue-900">Anonymous User</div>
+                                        <div className="text-sm text-blue-700">Sign in to save your progress</div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowAuthModal(true)}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                >
+                                    Sign In
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Features */}
+                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+                        <div className="p-4 border border-gray-200 rounded-lg">
+                            <div className="flex items-center mb-3">
+                                <svg className="w-5 h-5 text-gray-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                                </svg>
+                                <h3 className="font-semibold text-gray-900">Test State</h3>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                                {isAuthenticated 
+                                    ? '✅ Saved to InstantDB (synced across devices)' 
+                                    : '⚠️ Saved to sessionStorage (lost on close)'}
+                            </p>
+                        </div>
+                        
+                        <div className="p-4 border border-gray-200 rounded-lg">
+                            <div className="flex items-center mb-3">
+                                <svg className="w-5 h-5 text-gray-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                </svg>
+                                <h3 className="font-semibold text-gray-900">Test Attempts</h3>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                                {isAuthenticated 
+                                    ? `✅ ${testAttempts.length} attempts saved` 
+                                    : '❌ Not saved (anonymous user)'}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Test Attempts */}
+                    {isAuthenticated && testAttempts.length > 0 && (
+                        <div className="border border-gray-200 rounded-lg p-4">
+                            <h3 className="font-semibold text-gray-900 mb-3">Your Test Attempts</h3>
+                            <div className="space-y-2">
+                                {testAttempts.map(attempt => (
+                                    <div key={attempt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                        <div>
+                                            <div className="font-medium text-gray-900">{attempt.subject} - Test {attempt.testIndex + 1}</div>
+                                            <div className="text-sm text-gray-600">{new Date(attempt.date).toLocaleDateString()}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-lg font-bold text-blue-600">{attempt.score}%</div>
+                                            <button className="text-xs text-blue-600 hover:text-blue-800">Review →</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Auth Modal */}
+                    {showAuthModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowAuthModal(false)}>
+                            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In</h2>
+                                <p className="text-gray-600 mb-6">This is a demo. Click below to simulate signing in.</p>
+                                
+                                <button
+                                    onClick={mockSignIn}
+                                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium mb-3"
+                                >
+                                    Mock Sign In
+                                </button>
+                                
+                                <button
+                                    onClick={() => setShowAuthModal(false)}
+                                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 font-medium"
+                                >
+                                    Continue as Anonymous
+                                </button>
+                                
+                                <p className="text-xs text-gray-500 mt-4 text-center">
+                                    In the real app, this would use InstantDB authentication
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Implementation Status */}
+                    <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <h3 className="font-semibold text-gray-900 mb-2">Implementation Status</h3>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex items-center">
+                                <span className="text-green-600 mr-2">✓</span>
+                                <span>Database schema created (instant.schema.ts)</span>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-green-600 mr-2">✓</span>
+                                <span>Service layer implemented (db.js)</span>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-green-600 mr-2">✓</span>
+                                <span>Auth components created (auth-components.jsx)</span>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-green-600 mr-2">✓</span>
+                                <span>Test review UI created (test-review-view.jsx)</span>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-green-600 mr-2">✓</span>
+                                <span>Error handling and offline support added</span>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-yellow-600 mr-2">⚠</span>
+                                <span className="text-yellow-700">Need to run: npm install @instantdb/react</span>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-yellow-600 mr-2">⚠</span>
+                                <span className="text-yellow-700">Need build system to use ES modules</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<InstantDBDemo />, document.getElementById('demo-root'));
+    </script>
+</body>
+</html>
+
+
+
