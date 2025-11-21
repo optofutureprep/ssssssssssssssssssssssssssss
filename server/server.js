@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
-const PORT = 8000;
+const PORT = 5000;
 const REMOTE_EXAM_BUTTON_ENDPOINT = 'https://supras.com/api/exam-button-config';
 
 const mimeTypes = {
