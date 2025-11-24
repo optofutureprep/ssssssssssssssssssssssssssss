@@ -3224,104 +3224,6 @@
                     </div>
                 </div>
 
-<<<<<<< Updated upstream
-    <script src="db-wrapper.js"></script>
-    <script src="instantdb-auth.js"></script>
-    <script src="genchem_tests.js"></script>
-    <!-- Load exam data files -->
-    <script src="Biology/exam-data.js"></script>
-    <script src="General Chemistry/exam-data.js"></script>
-    <script src="Organic Chemistry/exam-data.js"></script>
-    <script src="Reading Comprehension/passages.js"></script>
-    <script src="Reading Comprehension/exam-data.js"></script>
-    <script src="Physics/exam-data.js"></script>
-    <script src="Quantitative Reasoning/exam-data.js"></script>
-    <script src="script.js"></script>
-    <script src="init_tests.js"></script>
-    
-    <!-- Auth UI Integration -->
-    <script type="text/babel">
-        // Add auth UI to the page
-        (function() {
-            const { useState, useEffect } = React;
-            
-            function AuthUI() {
-                const [showAuthModal, setShowAuthModal] = useState(false);
-                const [isAuthenticated, setIsAuthenticated] = useState(
-                    () => localStorage.getItem('app_auth_mode') === 'authenticated'
-                );
-                const [email, setEmail] = useState('');
-                const [password, setPassword] = useState('');
-                const [isSignUp, setIsSignUp] = useState(true); // true = sign up, false = sign in
-                const [loading, setLoading] = useState(false);
-                const [error, setError] = useState('');
-                const [showPassword, setShowPassword] = useState(false);
-                const [isOnExamPage, setIsOnExamPage] = useState(false);
-                
-                const handleAuth = async (e) => {
-                    e.preventDefault();
-                    setLoading(true);
-                    setError('');
-                    
-                    try {
-                        let result;
-                        
-                        if (isSignUp) {
-                            // Sign up new user
-                            result = await window.InstantDBAuth.signUpWithEmail(email, password);
-                        } else {
-                            // Sign in existing user
-                            result = await window.InstantDBAuth.signInWithEmail(email, password);
-                        }
-                        
-                        if (result.error) {
-                            setError(result.error);
-                            setLoading(false);
-                            return;
-                        }
-                        
-                        // Success! Set up authenticated state
-                        const user = result.user;
-                        
-                        window.APP_AUTH_STATE = {
-                            mode: 'authenticated',
-                            user: user,
-                            isAuthenticated: true
-                        };
-                        
-                        if (window.InstantDB) {
-                            window.__instantDBAuthState = {
-                                isAuthenticated: true,
-                                userId: user.id
-                            };
-                        }
-                        
-                        localStorage.setItem('app_auth_mode', 'authenticated');
-                        localStorage.setItem('app_user', JSON.stringify(user));
-                        
-                        // Clear biology tests for fresh start
-                        clearBiologyTests();
-                        
-                        setIsAuthenticated(true);
-                        setShowAuthModal(false);
-                        setEmail('');
-                        setPassword('');
-                        setLoading(false);
-                        
-                    } catch (err) {
-                        setError(err.message || 'Authentication failed. Please try again.');
-                        setLoading(false);
-                    }
-                };
-                
-                const clearBiologyTests = () => {
-                    // Clear all biology test data from localStorage
-                    const keysToRemove = [];
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key && key.includes('biology')) {
-                            keysToRemove.push(key);
-=======
                 <div class="pad" style="padding: 10px;">
                     <div class="grid"
                         style="display:grid; grid-template-columns: 48px repeat(5, 40px); column-gap:6px;">
@@ -3471,7 +3373,6 @@
                         } catch (error) {
                             console.warn('Failed to load registered users:', error);
                             return [];
->>>>>>> Stashed changes
                         }
                     }
 
