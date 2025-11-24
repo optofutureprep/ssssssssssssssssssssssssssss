@@ -3119,9 +3119,11 @@ function createHighlight() {
             const passageText = document.getElementById('test-passage-text');
             if (passageText && passageText.contains(mark)) {
                 const passageKey = getCurrentPassageKey();
-                const captured = capturePassageState(passageText);
-                if (captured) {
-                    passageHighlights[passageKey] = captured;
+                if (passageKey) {
+                    const captured = capturePassageState(passageText);
+                    if (captured) {
+                        passageHighlights[passageKey] = captured;
+                    }
                 }
             }
         });
@@ -3133,9 +3135,11 @@ function createHighlight() {
         const passageText = document.getElementById('test-passage-text');
         if (passageText && passageText.contains(mark)) {
             const passageKey = getCurrentPassageKey();
-            const captured = capturePassageState(passageText);
-            if (captured) {
-                passageHighlights[passageKey] = captured;
+            if (passageKey) {
+                const captured = capturePassageState(passageText);
+                if (captured) {
+                    passageHighlights[passageKey] = captured;
+                }
             }
         }
 
@@ -3182,25 +3186,16 @@ function removeHighlight(markElement, highlightId) {
         const passageText = document.getElementById('test-passage-text');
         if (passageText && passageText.contains(parent)) {
             const passageKey = getCurrentPassageKey();
-            const captured = capturePassageState(passageText);
-            if (captured) {
-                passageHighlights[passageKey] = captured;
+            if (passageKey) {
+                const captured = capturePassageState(passageText);
+                if (captured) {
+                    passageHighlights[passageKey] = captured;
+                }
             }
         }
     } catch (err) {
         console.error('Error removing highlight:', err);
     }
-}
-
-// Capture passage state for saving
-function capturePassageState(passageElement) {
-    if (!passageElement) return null;
-
-    // Capture all paragraph HTML to preserve highlights
-    const paragraphs = passageElement.querySelectorAll('p');
-    if (paragraphs.length === 0) return null;
-
-    return Array.from(paragraphs).map(p => p.innerHTML);
 }
 
 // Toggle button functionality removed - highlights are now directly yellow
@@ -3302,6 +3297,8 @@ function loadHighlightsFromLocalStorage() {
         // Load passage highlights
         test.forEach((q, i) => {
             const passageKey = getCurrentPassageKey(i);
+            if (!passageKey) return; // Skip if no valid passage key
+
             const saved = localStorage.getItem(`passageHighlights-${passageKey}`);
             if (saved) {
                 try {
@@ -3362,9 +3359,11 @@ function reattachHighlightButtons(container) {
                 const passageText = document.getElementById('test-passage-text');
                 if (passageText && passageText.contains(mark)) {
                     const passageKey = getCurrentPassageKey();
-                    const captured = capturePassageState(passageText);
-                    if (captured) {
-                        passageHighlights[passageKey] = captured;
+                    if (passageKey) {
+                        const captured = capturePassageState(passageText);
+                        if (captured) {
+                            passageHighlights[passageKey] = captured;
+                        }
                     }
                 }
             });
