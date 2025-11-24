@@ -26,19 +26,19 @@ let isReviewModeActive = false;
 // Define exit functions early so they're available when HTML onclick handlers are executed
 function exitFromActiveTest() {
     console.log('🔴 exitFromActiveTest called');
-    
+
     // Disable exit warning since user is explicitly exiting
     disableTestExitWarning();
-    
+
     // Save current state before exiting (in case user wants to resume later)
     if (currentSubject && currentTestIndex !== null && currentTestIndex !== undefined && Object.keys(userAnswers).length > 0) {
         saveState();
         console.log('💾 Test state saved before exit (can be resumed later)');
     }
-    
+
     // Save the subject name before clearing it
     const subjectToReturnTo = currentSubject;
-    
+
     if (typeof testTimer !== 'undefined' && testTimer) {
         clearInterval(testTimer);
         testTimer = null;
@@ -46,12 +46,12 @@ function exitFromActiveTest() {
     if (typeof exitFullscreen === 'function') {
         exitFullscreen();
     }
-    
+
     // Navigate back to subject page if we have a subject, otherwise go to dashboard
     if (subjectToReturnTo && typeof showSubject === 'function') {
         console.log('✅ Returning to subject page:', subjectToReturnTo);
         showSubject(subjectToReturnTo, null);
-        
+
         // Refresh the React component to show updated test data
         if (typeof window.initializeSubjectPagesReact === 'function') {
             window.initializeSubjectPagesReact(subjectToReturnTo);
@@ -64,15 +64,15 @@ function exitFromActiveTest() {
 
 function exitFromReview() {
     console.log('🔴 exitFromReview called');
-    
+
     // Save the subject name before clearing it
     const subjectToReturnTo = currentSubject;
-    
+
     // Navigate back to subject page if we have a subject, otherwise go to dashboard
     if (subjectToReturnTo && typeof showSubject === 'function') {
         console.log('✅ Returning to subject page from review:', subjectToReturnTo);
         showSubject(subjectToReturnTo, null);
-        
+
         // Refresh the React component to show updated test data
         if (typeof window.initializeSubjectPagesReact === 'function') {
             window.initializeSubjectPagesReact(subjectToReturnTo);
@@ -86,21 +86,21 @@ function exitFromReview() {
 function showExitTestModal() {
     console.log('🔴 showExitTestModal called, isReviewModeActive:', isReviewModeActive);
     const context = isReviewModeActive ? 'review' : 'test';
-    
+
     // Get modal element
     const modal = document.getElementById('exit-test-modal');
     if (!modal) {
         console.error('❌ Exit test modal not found!');
         return;
     }
-    
+
     // Use requestExitConfirmation if available (defined later in file)
     // Otherwise, set up modal directly with inline configuration
     if (typeof requestExitConfirmation === 'function') {
         requestExitConfirmation(context);
         return;
     }
-    
+
     // Fallback: Set up modal directly with configuration
     console.log('⚠️ requestExitConfirmation not yet available, setting up modal directly');
     const config = context === 'review' ? {
@@ -116,29 +116,29 @@ function showExitTestModal() {
         cancelLabel: 'Return to the Test',
         onConfirm: exitFromActiveTest
     };
-    
+
     // Store callback
     pendingExitContext = context;
     pendingExitCallback = config.onConfirm;
-    
+
     // Update modal content
     const titleEl = modal.querySelector('[data-exit-title]');
     const messageEl = modal.querySelector('[data-exit-message]');
     const confirmBtn = modal.querySelector('[data-exit-confirm]');
     const cancelBtn = modal.querySelector('[data-exit-cancel]');
-    
+
     if (titleEl) titleEl.textContent = config.title;
     if (messageEl) messageEl.textContent = config.message;
     if (confirmBtn) confirmBtn.textContent = config.confirmLabel;
     if (cancelBtn) cancelBtn.textContent = config.cancelLabel;
-    
+
     console.log('✅ Showing exit modal with context:', context);
     modal.style.display = 'flex';
     modal.style.zIndex = '10000';
-    
+
     // Prevent ESC key from closing (block background interaction)
     document.body.style.overflow = 'hidden';
-    
+
     // Prevent ESC key from closing modal
     const escHandler = (e) => {
         if (e.key === 'Escape') {
@@ -183,9 +183,9 @@ if (typeof window !== 'undefined') {
 }
 
 function updateDashboardOffset() {
-  // Dashboard hero content is now centered relative to viewport, no offset needed
-  // Keeping function for compatibility but it no longer needs to calculate offset
-  document.documentElement.style.setProperty('--dashboard-offset', '0px');
+    // Dashboard hero content is now centered relative to viewport, no offset needed
+    // Keeping function for compatibility but it no longer needs to calculate offset
+    document.documentElement.style.setProperty('--dashboard-offset', '0px');
 }
 
 const QUESTIONS = [];
@@ -196,850 +196,850 @@ const fmtMMSS = (seconds) => `${pad(Math.max(0, Math.floor(seconds / 60)))}:${pa
 const root = document.getElementById("rc-app");
 
 let state = {
-  current: 0,
-  answers: {},
-  marked: {},
-  view: "intro",
-  delayOn: true,
-  accom: false,
-  timeLeft: null
+    current: 0,
+    answers: {},
+    marked: {},
+    view: "intro",
+    delayOn: true,
+    accom: false,
+    timeLeft: null
 };
 
 let delayHandles = [];
 let timerHandle = null;
 
 function cloneState(value) {
-  return {
-    ...value,
-    answers: { ...value.answers },
-    marked: { ...value.marked }
-  };
+    return {
+        ...value,
+        answers: { ...value.answers },
+        marked: { ...value.marked }
+    };
 }
 
 function loadProgress() {
-  try {
-    // Try InstantDB first (for authenticated users)
-    if (window.InstantDB && window.InstantDB.isAuthenticated && window.InstantDB.isAuthenticated()) {
-      const subject = currentSubject || 'Reading Comprehension';
-      const testIndex = currentTestIndex !== null && currentTestIndex !== undefined ? currentTestIndex : 0;
-      const saved = window.InstantDB.loadTestState(subject, testIndex);
-      if (saved) {
-        if (saved.answers && typeof saved.answers === "object") {
-          state.answers = saved.answers;
+    try {
+        // Try InstantDB first (for authenticated users)
+        if (window.InstantDB && window.InstantDB.isAuthenticated && window.InstantDB.isAuthenticated()) {
+            const subject = currentSubject || 'Reading Comprehension';
+            const testIndex = currentTestIndex !== null && currentTestIndex !== undefined ? currentTestIndex : 0;
+            const saved = window.InstantDB.loadTestState(subject, testIndex);
+            if (saved) {
+                if (saved.answers && typeof saved.answers === "object") {
+                    state.answers = saved.answers;
+                }
+                if (saved.marked && typeof saved.marked === "object") {
+                    state.marked = saved.marked;
+                }
+                return;
+            }
         }
-        if (saved.marked && typeof saved.marked === "object") {
-          state.marked = saved.marked;
+
+        // Fallback to localStorage for backward compatibility
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+            return;
         }
-        return;
-      }
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+            if (parsed.answers && typeof parsed.answers === "object") {
+                state.answers = parsed.answers;
+            }
+            if (parsed.marked && typeof parsed.marked === "object") {
+                state.marked = parsed.marked;
+            }
+        }
+    } catch (error) {
+        console.error("Failed to load saved progress", error);
     }
-    
-    // Fallback to localStorage for backward compatibility
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return;
-    }
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object") {
-      if (parsed.answers && typeof parsed.answers === "object") {
-        state.answers = parsed.answers;
-      }
-      if (parsed.marked && typeof parsed.marked === "object") {
-        state.marked = parsed.marked;
-      }
-    }
-  } catch (error) {
-    console.error("Failed to load saved progress", error);
-  }
 }
 
 function saveProgress() {
-  try {
-    const payload = {
-      answers: state.answers,
-      marked: state.marked
-    };
-    
-    // Save to InstantDB if available and user is authenticated
-    if (window.InstantDB && window.InstantDB.isAuthenticated && window.InstantDB.isAuthenticated()) {
-      const subject = currentSubject || 'Reading Comprehension';
-      const testIndex = currentTestIndex !== null && currentTestIndex !== undefined ? currentTestIndex : 0;
-      window.InstantDB.saveTestState(subject, testIndex, payload);
-    } else if (window.InstantDB && window.InstantDB.saveTestState) {
-      // Anonymous users - save to sessionStorage via wrapper
-      const subject = currentSubject || 'Reading Comprehension';
-      const testIndex = currentTestIndex !== null && currentTestIndex !== undefined ? currentTestIndex : 0;
-      window.InstantDB.saveTestState(subject, testIndex, payload);
+    try {
+        const payload = {
+            answers: state.answers,
+            marked: state.marked
+        };
+
+        // Save to InstantDB if available and user is authenticated
+        if (window.InstantDB && window.InstantDB.isAuthenticated && window.InstantDB.isAuthenticated()) {
+            const subject = currentSubject || 'Reading Comprehension';
+            const testIndex = currentTestIndex !== null && currentTestIndex !== undefined ? currentTestIndex : 0;
+            window.InstantDB.saveTestState(subject, testIndex, payload);
+        } else if (window.InstantDB && window.InstantDB.saveTestState) {
+            // Anonymous users - save to sessionStorage via wrapper
+            const subject = currentSubject || 'Reading Comprehension';
+            const testIndex = currentTestIndex !== null && currentTestIndex !== undefined ? currentTestIndex : 0;
+            window.InstantDB.saveTestState(subject, testIndex, payload);
+        }
+
+        // Keep localStorage as fallback for now (will be removed later)
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (error) {
+        console.error("Failed to save progress", error);
     }
-    
-    // Keep localStorage as fallback for now (will be removed later)
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  } catch (error) {
-    console.error("Failed to save progress", error);
-  }
 }
 
 function clearDelays() {
-  delayHandles.forEach((handle) => window.clearTimeout(handle));
-  delayHandles = [];
+    delayHandles.forEach((handle) => window.clearTimeout(handle));
+    delayHandles = [];
 }
 
 function exitToSubjectPage() {
-  clearDelays();
-  if (timerHandle) {
-    window.clearTimeout(timerHandle);
-    timerHandle = null;
-  }
+    clearDelays();
+    if (timerHandle) {
+        window.clearTimeout(timerHandle);
+        timerHandle = null;
+    }
 
-  const { referrer } = document;
-  if (referrer && referrer !== window.location.href) {
-    window.location.href = referrer;
-    return;
-  }
+    const { referrer } = document;
+    if (referrer && referrer !== window.location.href) {
+        window.location.href = referrer;
+        return;
+    }
 
-  window.location.href = "/";
+    window.location.href = "/";
 }
 
 function scheduleAction(callback) {
-  if (!state.delayOn) {
-    callback();
-    return;
-  }
-  const handle = window.setTimeout(() => {
-    callback();
-    delayHandles = delayHandles.filter((id) => id !== handle);
-  }, 2000);
-  delayHandles.push(handle);
+    if (!state.delayOn) {
+        callback();
+        return;
+    }
+    const handle = window.setTimeout(() => {
+        callback();
+        delayHandles = delayHandles.filter((id) => id !== handle);
+    }, 2000);
+    delayHandles.push(handle);
 }
 
 function scheduleTick() {
-  if (timerHandle) {
-    window.clearTimeout(timerHandle);
-    timerHandle = null;
-  }
-
-  if (state.view !== "test" || typeof state.timeLeft !== "number") {
-    return;
-  }
-
-  if (state.timeLeft <= 0) {
-    if (state.view !== "results") {
-      updateState((prev) => {
-        const next = cloneState(prev);
-        next.timeLeft = 0;
-        next.view = "results";
-        return next;
-      });
+    if (timerHandle) {
+        window.clearTimeout(timerHandle);
+        timerHandle = null;
     }
-    return;
-  }
 
-  timerHandle = window.setTimeout(() => {
-    if (state.view !== "test") {
-      return;
+    if (state.view !== "test" || typeof state.timeLeft !== "number") {
+        return;
     }
-    updateState((prev) => {
-      const next = cloneState(prev);
-      if (typeof next.timeLeft === "number") {
-        next.timeLeft = Math.max(0, next.timeLeft - 1);
-        if (next.timeLeft === 0) {
-          next.view = "results";
+
+    if (state.timeLeft <= 0) {
+        if (state.view !== "results") {
+            updateState((prev) => {
+                const next = cloneState(prev);
+                next.timeLeft = 0;
+                next.view = "results";
+                return next;
+            });
         }
-      }
-      return next;
-    });
-  }, 1000);
+        return;
+    }
+
+    timerHandle = window.setTimeout(() => {
+        if (state.view !== "test") {
+            return;
+        }
+        updateState((prev) => {
+            const next = cloneState(prev);
+            if (typeof next.timeLeft === "number") {
+                next.timeLeft = Math.max(0, next.timeLeft - 1);
+                if (next.timeLeft === 0) {
+                    next.view = "results";
+                }
+            }
+            return next;
+        });
+    }, 1000);
 }
 
 function updateState(updater) {
-  const previous = state;
-  const nextState =
-    typeof updater === "function"
-      ? updater(cloneState(state))
-      : {
-          ...cloneState(state),
-          ...updater
-        };
+    const previous = state;
+    const nextState =
+        typeof updater === "function"
+            ? updater(cloneState(state))
+            : {
+                ...cloneState(state),
+                ...updater
+            };
 
-  if (!nextState) {
-    return;
-  }
+    if (!nextState) {
+        return;
+    }
 
-  const answersChanged = previous.answers !== nextState.answers;
-  const markedChanged = previous.marked !== nextState.marked;
+    const answersChanged = previous.answers !== nextState.answers;
+    const markedChanged = previous.marked !== nextState.marked;
 
-  state = nextState;
+    state = nextState;
 
-  if (answersChanged || markedChanged) {
-    saveProgress();
-  }
+    if (answersChanged || markedChanged) {
+        saveProgress();
+    }
 
-  render();
-  scheduleTick();
+    render();
+    scheduleTick();
 }
 
 function calcScore() {
-  let correct = 0;
-  QUESTIONS.forEach((question, index) => {
-    if (state.answers[index] === question.a) {
-      correct += 1;
-    }
-  });
-  return { correct, total: QUESTIONS.length };
+    let correct = 0;
+    QUESTIONS.forEach((question, index) => {
+        if (state.answers[index] === question.a) {
+            correct += 1;
+        }
+    });
+    return { correct, total: QUESTIONS.length };
 }
 
 function startExam() {
-  clearDelays();
-  const base = 60 * 10;
-  const startingTime = state.accom ? Math.floor(base * 1.5) : base;
-  updateState((prev) => {
-    const next = cloneState(prev);
-    next.current = 0;
-    next.view = "test";
-    next.timeLeft = startingTime;
-    return next;
-  });
+    clearDelays();
+    const base = 60 * 10;
+    const startingTime = state.accom ? Math.floor(base * 1.5) : base;
+    updateState((prev) => {
+        const next = cloneState(prev);
+        next.current = 0;
+        next.view = "test";
+        next.timeLeft = startingTime;
+        return next;
+    });
 }
 
 function goToQuestion(targetIndex) {
-  if (targetIndex < 0 || targetIndex >= QUESTIONS.length) {
-    return;
-  }
-  clearDelays();
-  scheduleAction(() => {
-    updateState((prev) => {
-      const next = cloneState(prev);
-      next.current = targetIndex;
-      next.view = "test";
-      return next;
+    if (targetIndex < 0 || targetIndex >= QUESTIONS.length) {
+        return;
+    }
+    clearDelays();
+    scheduleAction(() => {
+        updateState((prev) => {
+            const next = cloneState(prev);
+            next.current = targetIndex;
+            next.view = "test";
+            return next;
+        });
     });
-  });
 }
 
 function go(delta) {
-  const target = Math.max(0, Math.min(state.current + delta, QUESTIONS.length - 1));
-  if (target === state.current) {
-    return;
-  }
-  goToQuestion(target);
+    const target = Math.max(0, Math.min(state.current + delta, QUESTIONS.length - 1));
+    if (target === state.current) {
+        return;
+    }
+    goToQuestion(target);
 }
 
 function openReview() {
-  clearDelays();
-  scheduleAction(() => {
-    updateState((prev) => {
-      const next = cloneState(prev);
-      next.view = "review";
-      return next;
+    clearDelays();
+    scheduleAction(() => {
+        updateState((prev) => {
+            const next = cloneState(prev);
+            next.view = "review";
+            return next;
+        });
     });
-  });
 }
 
 function finishOrAdvance() {
-  clearDelays();
-  const isLastQuestion = state.current >= QUESTIONS.length - 1;
-  scheduleAction(() => {
-    if (isLastQuestion) {
-      updateState((prev) => {
-        const next = cloneState(prev);
-        next.view = "results";
-        next.timeLeft = typeof next.timeLeft === "number" ? next.timeLeft : 0;
-        return next;
-      });
-      return;
-    }
-    updateState((prev) => {
-      const next = cloneState(prev);
-      next.current = Math.min(QUESTIONS.length - 1, next.current + 1);
-      return next;
+    clearDelays();
+    const isLastQuestion = state.current >= QUESTIONS.length - 1;
+    scheduleAction(() => {
+        if (isLastQuestion) {
+            updateState((prev) => {
+                const next = cloneState(prev);
+                next.view = "results";
+                next.timeLeft = typeof next.timeLeft === "number" ? next.timeLeft : 0;
+                return next;
+            });
+            return;
+        }
+        updateState((prev) => {
+            const next = cloneState(prev);
+            next.current = Math.min(QUESTIONS.length - 1, next.current + 1);
+            return next;
+        });
     });
-  });
 }
 
 function toggleMark(index) {
-  updateState((prev) => {
-    const next = cloneState(prev);
-    const currentlyMarked = !!next.marked[index];
-    if (currentlyMarked) {
-      delete next.marked[index];
-    } else {
-      next.marked[index] = true;
-    }
-    return next;
-  });
+    updateState((prev) => {
+        const next = cloneState(prev);
+        const currentlyMarked = !!next.marked[index];
+        if (currentlyMarked) {
+            delete next.marked[index];
+        } else {
+            next.marked[index] = true;
+        }
+        return next;
+    });
 }
 
 function chooseAnswer(questionIndex, choiceIndex) {
-  updateState((prev) => {
-    const next = cloneState(prev);
-    next.answers[questionIndex] = choiceIndex;
-    return next;
-  });
+    updateState((prev) => {
+        const next = cloneState(prev);
+        next.answers[questionIndex] = choiceIndex;
+        return next;
+    });
 }
 
 function resetToIntro() {
-  clearDelays();
-  if (timerHandle) {
-    window.clearTimeout(timerHandle);
-    timerHandle = null;
-  }
-  updateState((prev) => {
-    const next = cloneState(prev);
-    next.view = "intro";
-    next.timeLeft = null;
-    return next;
-  });
+    clearDelays();
+    if (timerHandle) {
+        window.clearTimeout(timerHandle);
+        timerHandle = null;
+    }
+    updateState((prev) => {
+        const next = cloneState(prev);
+        next.view = "intro";
+        next.timeLeft = null;
+        return next;
+    });
 }
 
 function el(tag, props = {}, ...children) {
-  const element = document.createElement(tag);
-  const {
-    className,
-    text,
-    html,
-    attrs,
-    dataset,
-    onClick,
-    onChange,
-    onInput,
-    ...rest
-  } = props;
+    const element = document.createElement(tag);
+    const {
+        className,
+        text,
+        html,
+        attrs,
+        dataset,
+        onClick,
+        onChange,
+        onInput,
+        ...rest
+    } = props;
 
-  if (className) {
-    element.className = className;
-  }
-
-  if (text !== undefined) {
-    element.textContent = text;
-  }
-
-  if (html !== undefined) {
-    element.innerHTML = html;
-  }
-
-  if (attrs) {
-    Object.entries(attrs).forEach(([key, value]) => {
-      element.setAttribute(key, value);
-    });
-  }
-
-  if (dataset) {
-    Object.entries(dataset).forEach(([key, value]) => {
-      element.dataset[key] = value;
-    });
-  }
-
-  if (typeof onClick === "function") {
-    element.addEventListener("click", onClick);
-  }
-
-  if (typeof onChange === "function") {
-    element.addEventListener("change", onChange);
-  }
-
-  if (typeof onInput === "function") {
-    element.addEventListener("input", onInput);
-  }
-
-  Object.entries(rest).forEach(([key, value]) => {
-    if (key in element && value !== undefined) {
-      element[key] = value;
+    if (className) {
+        element.className = className;
     }
-  });
 
-  children.forEach((child) => {
-    if (child === null || child === undefined) {
-      return;
+    if (text !== undefined) {
+        element.textContent = text;
     }
-    element.appendChild(
-      typeof child === "string" ? document.createTextNode(child) : child
-    );
-  });
 
-  return element;
+    if (html !== undefined) {
+        element.innerHTML = html;
+    }
+
+    if (attrs) {
+        Object.entries(attrs).forEach(([key, value]) => {
+            element.setAttribute(key, value);
+        });
+    }
+
+    if (dataset) {
+        Object.entries(dataset).forEach(([key, value]) => {
+            element.dataset[key] = value;
+        });
+    }
+
+    if (typeof onClick === "function") {
+        element.addEventListener("click", onClick);
+    }
+
+    if (typeof onChange === "function") {
+        element.addEventListener("change", onChange);
+    }
+
+    if (typeof onInput === "function") {
+        element.addEventListener("input", onInput);
+    }
+
+    Object.entries(rest).forEach(([key, value]) => {
+        if (key in element && value !== undefined) {
+            element[key] = value;
+        }
+    });
+
+    children.forEach((child) => {
+        if (child === null || child === undefined) {
+            return;
+        }
+        element.appendChild(
+            typeof child === "string" ? document.createTextNode(child) : child
+        );
+    });
+
+    return element;
 }
 
 function renderIntro() {
-  const shell = el("div", { className: "rc-shell" });
-  const topbar = el(
-    "div",
-    { className: "rc-topbar" },
-    el(
-      "button",
-      {
-        className: "rc-topbar__button",
-        attrs: { "aria-label": "Close" },
-        onClick: exitToSubjectPage
-      },
-      "×"
-    ),
-    el(
-      "div",
-      { className: "rc-topbar__title" },
-      el("div", { className: "rc-topbar__title-main", text: "Bootcamp.com | OAT" }),
-      el("div", { className: "rc-topbar__title-sub", text: "Reading Comprehension Test 1" })
-    ),
-    el("div", { className: "rc-topbar__time", html: "&nbsp;" })
-  );
-
-  const delayToggle = el(
-    "button",
-    {
-      className: "rc-toggle",
-      dataset: { active: state.delayOn ? "true" : "false" },
-      attrs: { type: "button", "aria-pressed": String(state.delayOn) },
-      onClick: () => {
-        updateState({ delayOn: !state.delayOn });
-      }
-    },
-    el("span", { className: "rc-toggle__thumb" })
-  );
-
-  const accomToggle = el(
-    "button",
-    {
-      className: "rc-toggle",
-      dataset: { active: state.accom ? "true" : "false" },
-      attrs: { type: "button", "aria-pressed": String(state.accom) },
-      onClick: () => {
-        updateState({ accom: !state.accom });
-      }
-    },
-    el("span", { className: "rc-toggle__thumb" })
-  );
-
-  const bodyInner = el(
-    "div",
-    { className: "rc-body__inner" },
-    el(
-      "div",
-      { style: "width: 100%;" },
-      el(
+    const shell = el("div", { className: "rc-shell" });
+    const topbar = el(
         "div",
-        { className: "rc-intro-card" },
+        { className: "rc-topbar" },
         el(
-          "h2",
-          { text: "This is Reading Comprehension Test 1. Read this before starting:" }
+            "button",
+            {
+                className: "rc-topbar__button",
+                attrs: { "aria-label": "Close" },
+                onClick: exitToSubjectPage
+            },
+            "×"
         ),
         el(
-          "ol",
-          {},
-          el("li", { text: `You have 10 minutes to finish ${QUESTIONS.length} questions.` }),
-          el("li", { text: "You can review questions before ending the section." }),
-          el("li", { text: "Your score analysis appears after finishing." })
+            "div",
+            { className: "rc-topbar__title" },
+            el("div", { className: "rc-topbar__title-main", text: "Bootcamp.com | OAT" }),
+            el("div", { className: "rc-topbar__title-sub", text: "Reading Comprehension Test 1" })
         ),
-        el("p", { text: "Click NEXT to continue." })
-      ),
-      el("h3", { className: "rc-section-heading", text: "Test Settings" }),
-      el(
+        el("div", { className: "rc-topbar__time", html: "&nbsp;" })
+    );
+
+    const delayToggle = el(
+        "button",
+        {
+            className: "rc-toggle",
+            dataset: { active: state.delayOn ? "true" : "false" },
+            attrs: { type: "button", "aria-pressed": String(state.delayOn) },
+            onClick: () => {
+                updateState({ delayOn: !state.delayOn });
+            }
+        },
+        el("span", { className: "rc-toggle__thumb" })
+    );
+
+    const accomToggle = el(
+        "button",
+        {
+            className: "rc-toggle",
+            dataset: { active: state.accom ? "true" : "false" },
+            attrs: { type: "button", "aria-pressed": String(state.accom) },
+            onClick: () => {
+                updateState({ accom: !state.accom });
+            }
+        },
+        el("span", { className: "rc-toggle__thumb" })
+    );
+
+    const bodyInner = el(
         "div",
-        { className: "rc-settings-list" },
+        { className: "rc-body__inner" },
         el(
-          "div",
-          { className: "rc-setting" },
-          delayToggle,
-          el(
             "div",
-            { html: '<span class="font-semibold">Prometric Delay:</span> Adds a ~2 second delay on navigation and review.' }
-          )
-        ),
-        el(
-          "div",
-          { className: "rc-setting" },
-          accomToggle,
-          el(
-            "div",
-            { html: '<span class="font-semibold">Time Accommodations:</span> 1.5x time if enabled.' }
-          )
+            { style: "width: 100%;" },
+            el(
+                "div",
+                { className: "rc-intro-card" },
+                el(
+                    "h2",
+                    { text: "This is Reading Comprehension Test 1. Read this before starting:" }
+                ),
+                el(
+                    "ol",
+                    {},
+                    el("li", { text: `You have 10 minutes to finish ${QUESTIONS.length} questions.` }),
+                    el("li", { text: "You can review questions before ending the section." }),
+                    el("li", { text: "Your score analysis appears after finishing." })
+                ),
+                el("p", { text: "Click NEXT to continue." })
+            ),
+            el("h3", { className: "rc-section-heading", text: "Test Settings" }),
+            el(
+                "div",
+                { className: "rc-settings-list" },
+                el(
+                    "div",
+                    { className: "rc-setting" },
+                    delayToggle,
+                    el(
+                        "div",
+                        { html: '<span class="font-semibold">Prometric Delay:</span> Adds a ~2 second delay on navigation and review.' }
+                    )
+                ),
+                el(
+                    "div",
+                    { className: "rc-setting" },
+                    accomToggle,
+                    el(
+                        "div",
+                        { html: '<span class="font-semibold">Time Accommodations:</span> 1.5x time if enabled.' }
+                    )
+                )
+            )
         )
-      )
-    )
-  );
+    );
 
-  const body = el("div", { className: "rc-body" }, bodyInner);
+    const body = el("div", { className: "rc-body" }, bodyInner);
 
-  const footer = el(
-    "div",
-    { className: "rc-footer-bar" },
-    el(
-      "button",
-      {
-        className: "rc-button",
-        attrs: { type: "button" },
-        onClick: startExam
-      },
-      "NEXT"
-    )
-  );
+    const footer = el(
+        "div",
+        { className: "rc-footer-bar" },
+        el(
+            "button",
+            {
+                className: "rc-button",
+                attrs: { type: "button" },
+                onClick: startExam
+            },
+            "NEXT"
+        )
+    );
 
-  shell.append(topbar, body, footer);
-  return shell;
+    shell.append(topbar, body, footer);
+    return shell;
 }
 
 function renderTest() {
-  const question = QUESTIONS[state.current];
-  const passage = question.passageId ? PASSAGES[question.passageId] : null;
-  const shell = el("div", { className: "rc-shell" });
+    const question = QUESTIONS[state.current];
+    const passage = question.passageId ? PASSAGES[question.passageId] : null;
+    const shell = el("div", { className: "rc-shell" });
 
-  const topbar = el(
-    "div",
-    { className: "rc-topbar" },
-    el("div", { className: "rc-topbar__title-main", text: `Question ${state.current + 1} of ${QUESTIONS.length}` }),
-    el("div", { className: "rc-topbar__title-sub", text: "Reading Comprehension — Sample" }),
-    el("div", {
-      className: "rc-topbar__time",
-      text: `Time remaining: ${state.timeLeft !== null ? fmtMMSS(state.timeLeft) : "--:--"}`
-    })
-  );
+    const topbar = el(
+        "div",
+        { className: "rc-topbar" },
+        el("div", { className: "rc-topbar__title-main", text: `Question ${state.current + 1} of ${QUESTIONS.length}` }),
+        el("div", { className: "rc-topbar__title-sub", text: "Reading Comprehension — Sample" }),
+        el("div", {
+            className: "rc-topbar__time",
+            text: `Time remaining: ${state.timeLeft !== null ? fmtMMSS(state.timeLeft) : "--:--"}`
+        })
+    );
 
-  const choices = el("div", { className: "rc-choice-list" });
+    const choices = el("div", { className: "rc-choice-list" });
 
-  question.c.forEach((choice, index) => {
-    const label = el("label", { className: "rc-choice" });
-    const input = el("input", {
-      type: "radio",
-      name: `question-${state.current}`,
-      checked: state.answers[state.current] === index,
-      onChange: () => chooseAnswer(state.current, index)
+    question.c.forEach((choice, index) => {
+        const label = el("label", { className: "rc-choice" });
+        const input = el("input", {
+            type: "radio",
+            name: `question-${state.current}`,
+            checked: state.answers[state.current] === index,
+            onChange: () => chooseAnswer(state.current, index)
+        });
+        const span = el("span", { text: `${String.fromCharCode(65 + index)}. ${choice}` });
+        label.append(input, span);
+        choices.appendChild(label);
     });
-    const span = el("span", { text: `${String.fromCharCode(65 + index)}. ${choice}` });
-    label.append(input, span);
-    choices.appendChild(label);
-  });
 
-  const questionCard = el(
-    "div",
-    { className: "rc-test-card" },
-    state.marked[state.current]
-      ? el("span", { className: "rc-marked-flag", text: "MARKED" })
-      : null,
-    el("div", { className: "rc-question-stem", text: question.stem }),
-    choices,
-    passage
-      ? el(
-          "div",
-          { className: "rc-passage" },
-          el("div", { className: "rc-passage__title", text: passage.title }),
-          el(
-            "div",
-            { className: "rc-passage__content" },
-            ...passage.content.map((paragraph) => el("p", { text: paragraph }))
-          )
-        )
-      : null,
-    el("p", { className: "rc-instruction", text: "Click NEXT to continue." })
-  );
+    const questionCard = el(
+        "div",
+        { className: "rc-test-card" },
+        state.marked[state.current]
+            ? el("span", { className: "rc-marked-flag", text: "MARKED" })
+            : null,
+        el("div", { className: "rc-question-stem", text: question.stem }),
+        choices,
+        passage
+            ? el(
+                "div",
+                { className: "rc-passage" },
+                el("div", { className: "rc-passage__title", text: passage.title }),
+                el(
+                    "div",
+                    { className: "rc-passage__content" },
+                    ...passage.content.map((paragraph) => el("p", { text: paragraph }))
+                )
+            )
+            : null,
+        el("p", { className: "rc-instruction", text: "Click NEXT to continue." })
+    );
 
-  const body = el("div", { className: "rc-body rc-body--test" }, el("div", { className: "rc-test-area" }, questionCard));
+    const body = el("div", { className: "rc-body rc-body--test" }, el("div", { className: "rc-test-area" }, questionCard));
 
-  const previousButton = el(
-    "button",
-    {
-      className: "rc-button rc-button--secondary",
-      attrs: { type: "button" },
-      disabled: state.current === 0,
-      onClick: () => go(-1)
-    },
-    "PREVIOUS"
-  );
+    const previousButton = el(
+        "button",
+        {
+            className: "rc-button rc-button--secondary",
+            attrs: { type: "button" },
+            disabled: state.current === 0,
+            onClick: () => go(-1)
+        },
+        "PREVIOUS"
+    );
 
-  const nextButton = el(
-    "button",
-    {
-      className: "rc-button",
-      attrs: { type: "button" },
-      onClick: finishOrAdvance
-    },
-    state.current < QUESTIONS.length - 1 ? "NEXT" : "END SECTION"
-  );
+    const nextButton = el(
+        "button",
+        {
+            className: "rc-button",
+            attrs: { type: "button" },
+            onClick: finishOrAdvance
+        },
+        state.current < QUESTIONS.length - 1 ? "NEXT" : "END SECTION"
+    );
 
-  const markButton = el(
-    "button",
-    {
-      className: state.marked[state.current]
-        ? "rc-button rc-button--mark rc-button--marked"
-        : "rc-button rc-button--mark",
-      attrs: { type: "button" },
-      onClick: () => toggleMark(state.current)
-    },
-    "MARK"
-  );
+    const markButton = el(
+        "button",
+        {
+            className: state.marked[state.current]
+                ? "rc-button rc-button--mark rc-button--marked"
+                : "rc-button rc-button--mark",
+            attrs: { type: "button" },
+            onClick: () => toggleMark(state.current)
+        },
+        "MARK"
+    );
 
-  const reviewButton = el(
-    "button",
-    {
-      className: "rc-button rc-button--secondary",
-      attrs: { type: "button" },
-      onClick: openReview
-    },
-    "REVIEW"
-  );
+    const reviewButton = el(
+        "button",
+        {
+            className: "rc-button rc-button--secondary",
+            attrs: { type: "button" },
+            onClick: openReview
+        },
+        "REVIEW"
+    );
 
-  const bottomBar = el(
-    "div",
-    { className: "rc-bottom-bar" },
-    el("div", { className: "rc-bottom-group" }, previousButton),
-    el("div", {}, nextButton),
-    el("div", { className: "rc-bottom-group" }, markButton, reviewButton)
-  );
+    const bottomBar = el(
+        "div",
+        { className: "rc-bottom-bar" },
+        el("div", { className: "rc-bottom-group" }, previousButton),
+        el("div", {}, nextButton),
+        el("div", { className: "rc-bottom-group" }, markButton, reviewButton)
+    );
 
-  shell.append(topbar, body, bottomBar);
-  return shell;
+    shell.append(topbar, body, bottomBar);
+    return shell;
 }
 
 function renderReview() {
-  const shell = el("div", { className: "rc-shell" });
-  const topbar = el(
-    "div",
-    { className: "rc-topbar" },
-    el(
-      "button",
-      {
-        className: "rc-topbar__button",
-        attrs: { "aria-label": "Close" },
-        onClick: exitToSubjectPage
-      },
-      "×"
-    ),
-    el(
-      "div",
-      { className: "rc-topbar__title" },
-      el("div", { className: "rc-topbar__title-main", text: "Bootcamp.com | OAT" }),
-      el("div", { className: "rc-topbar__title-sub", text: "Review Questions" })
-    ),
-    el("div", {
-      className: "rc-topbar__time",
-      text: `Time remaining: ${fmtMMSS(state.timeLeft ?? 0)}`
-    })
-  );
-
-  const rows = QUESTIONS.map((_, index) => ({
-    index,
-    name: `Question ${index + 1}`,
-    isMarked: !!state.marked[index],
-    isDone: state.answers[index] !== undefined,
-    isSkipped: state.answers[index] === undefined
-  }));
-
-  const reviewList = el("div", { className: "rc-review-list" });
-  rows.forEach((row) => {
-    const button = el(
-      "button",
-      { className: "rc-review-row", attrs: { type: "button" } },
-      el(
+    const shell = el("div", { className: "rc-shell" });
+    const topbar = el(
         "div",
-        { className: "rc-review-cell" },
+        { className: "rc-topbar" },
         el(
-          "svg",
-          {
-            attrs: {
-              width: "14",
-              height: "14",
-              viewBox: "0 0 24 24",
-              "aria-hidden": "true"
-            }
-          },
-          el("path", {
-            attrs: {
-              fill: "currentColor",
-              d: "M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1v5h5"
-            }
-          })
+            "button",
+            {
+                className: "rc-topbar__button",
+                attrs: { "aria-label": "Close" },
+                onClick: exitToSubjectPage
+            },
+            "×"
         ),
-        el("span", { text: row.name })
-      ),
-      el("div", { className: "rc-review-cell", text: row.isMarked ? "Yes" : "" }),
-      el("div", { className: "rc-review-cell", text: row.isDone ? "Yes" : "" }),
-      el("div", { className: "rc-review-cell", text: row.isSkipped ? "Yes" : "" })
+        el(
+            "div",
+            { className: "rc-topbar__title" },
+            el("div", { className: "rc-topbar__title-main", text: "Bootcamp.com | OAT" }),
+            el("div", { className: "rc-topbar__title-sub", text: "Review Questions" })
+        ),
+        el("div", {
+            className: "rc-topbar__time",
+            text: `Time remaining: ${fmtMMSS(state.timeLeft ?? 0)}`
+        })
     );
-    button.addEventListener("click", () => goToQuestion(row.index));
-    reviewList.appendChild(button);
-  });
 
-  const table = el(
-    "div",
-    { className: "rc-review-table" },
-    el(
-      "div",
-      { className: "rc-review-header" },
-      el("div", { text: "Name" }),
-      el("div", { text: "Marked" }),
-      el("div", { text: "Completed" }),
-      el("div", { text: "Skipped" })
-    ),
-    reviewList
-  );
+    const rows = QUESTIONS.map((_, index) => ({
+        index,
+        name: `Question ${index + 1}`,
+        isMarked: !!state.marked[index],
+        isDone: state.answers[index] !== undefined,
+        isSkipped: state.answers[index] === undefined
+    }));
 
-  const body = el(
-    "div",
-    { className: "rc-body" },
-    el("div", { className: "rc-review-container" }, table)
-  );
+    const reviewList = el("div", { className: "rc-review-list" });
+    rows.forEach((row) => {
+        const button = el(
+            "button",
+            { className: "rc-review-row", attrs: { type: "button" } },
+            el(
+                "div",
+                { className: "rc-review-cell" },
+                el(
+                    "svg",
+                    {
+                        attrs: {
+                            width: "14",
+                            height: "14",
+                            viewBox: "0 0 24 24",
+                            "aria-hidden": "true"
+                        }
+                    },
+                    el("path", {
+                        attrs: {
+                            fill: "currentColor",
+                            d: "M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1v5h5"
+                        }
+                    })
+                ),
+                el("span", { text: row.name })
+            ),
+            el("div", { className: "rc-review-cell", text: row.isMarked ? "Yes" : "" }),
+            el("div", { className: "rc-review-cell", text: row.isDone ? "Yes" : "" }),
+            el("div", { className: "rc-review-cell", text: row.isSkipped ? "Yes" : "" })
+        );
+        button.addEventListener("click", () => goToQuestion(row.index));
+        reviewList.appendChild(button);
+    });
 
-  const findFirstIndex = (predicate) => {
-    const match = rows.find(predicate);
-    return match ? match.index : null;
-  };
+    const table = el(
+        "div",
+        { className: "rc-review-table" },
+        el(
+            "div",
+            { className: "rc-review-header" },
+            el("div", { text: "Name" }),
+            el("div", { text: "Marked" }),
+            el("div", { text: "Completed" }),
+            el("div", { text: "Skipped" })
+        ),
+        reviewList
+    );
 
-  const reviewMarked = el(
-    "button",
-    {
-      className: "rc-button",
-      attrs: { type: "button" },
-      onClick: () => {
-        const index = findFirstIndex((row) => row.isMarked);
-        if (index !== null) {
-          goToQuestion(index);
-        }
-      }
-    },
-    "REVIEW MARKED"
-  );
+    const body = el(
+        "div",
+        { className: "rc-body" },
+        el("div", { className: "rc-review-container" }, table)
+    );
 
-  const reviewAll = el(
-    "button",
-    {
-      className: "rc-button",
-      attrs: { type: "button" },
-      onClick: () => goToQuestion(0)
-    },
-    "REVIEW ALL"
-  );
+    const findFirstIndex = (predicate) => {
+        const match = rows.find(predicate);
+        return match ? match.index : null;
+    };
 
-  const reviewIncomplete = el(
-    "button",
-    {
-      className: "rc-button",
-      attrs: { type: "button" },
-      onClick: () => {
-        const index = findFirstIndex((row) => !row.isDone);
-        if (index !== null) {
-          goToQuestion(index);
-        }
-      }
-    },
-    "REVIEW INCOMPLETE"
-  );
+    const reviewMarked = el(
+        "button",
+        {
+            className: "rc-button",
+            attrs: { type: "button" },
+            onClick: () => {
+                const index = findFirstIndex((row) => row.isMarked);
+                if (index !== null) {
+                    goToQuestion(index);
+                }
+            }
+        },
+        "REVIEW MARKED"
+    );
 
-  const endButton = el(
-    "button",
-    {
-      className: "rc-button",
-      attrs: { type: "button" },
-      onClick: () => updateState({ view: "results" })
-    },
-    "END"
-  );
+    const reviewAll = el(
+        "button",
+        {
+            className: "rc-button",
+            attrs: { type: "button" },
+            onClick: () => goToQuestion(0)
+        },
+        "REVIEW ALL"
+    );
 
-  const footer = el(
-    "div",
-    { className: "rc-review-actions" },
-    el("div", { className: "rc-review-buttons" }, reviewMarked, reviewAll, reviewIncomplete),
-    endButton
-  );
+    const reviewIncomplete = el(
+        "button",
+        {
+            className: "rc-button",
+            attrs: { type: "button" },
+            onClick: () => {
+                const index = findFirstIndex((row) => !row.isDone);
+                if (index !== null) {
+                    goToQuestion(index);
+                }
+            }
+        },
+        "REVIEW INCOMPLETE"
+    );
 
-  shell.append(topbar, body, footer);
-  return shell;
+    const endButton = el(
+        "button",
+        {
+            className: "rc-button",
+            attrs: { type: "button" },
+            onClick: () => updateState({ view: "results" })
+        },
+        "END"
+    );
+
+    const footer = el(
+        "div",
+        { className: "rc-review-actions" },
+        el("div", { className: "rc-review-buttons" }, reviewMarked, reviewAll, reviewIncomplete),
+        endButton
+    );
+
+    shell.append(topbar, body, footer);
+    return shell;
 }
 
 function renderResults() {
-  const { correct, total } = calcScore();
-  const container = el(
-    "div",
-    { className: "rc-results" },
-    el("h1", { text: "Results" }),
-    el("p", { text: `Score: ${correct} / ${total} (${Math.round((correct / total) * 100)}%).` })
-  );
-
-  QUESTIONS.forEach((question, index) => {
-    const selected = state.answers[index];
-    const correctAnswer = question.a;
-    const isCorrect = selected === correctAnswer;
-
-    const item = el(
-      "div",
-      {
-        className: isCorrect ? "rc-result-item" : "rc-result-item rc-result-item--incorrect"
-      },
-      el("div", { className: "rc-result-stem", text: `${index + 1}. ${question.stem}` })
+    const { correct, total } = calcScore();
+    const container = el(
+        "div",
+        { className: "rc-results" },
+        el("h1", { text: "Results" }),
+        el("p", { text: `Score: ${correct} / ${total} (${Math.round((correct / total) * 100)}%).` })
     );
 
-    const list = el("ul", { className: "rc-result-choices" });
-    question.c.forEach((choice, choiceIndex) => {
-      let suffix = "";
-      if (choiceIndex === correctAnswer) {
-        suffix += " (correct)";
-      }
-      if (selected === choiceIndex && choiceIndex !== correctAnswer) {
-        suffix += " (your answer)";
-      }
-      const listItem = el("li", {
-        text: `${String.fromCharCode(65 + choiceIndex)}. ${choice}${suffix}`,
-        className: choiceIndex === correctAnswer ? "font-semibold" : ""
-      });
-      list.appendChild(listItem);
+    QUESTIONS.forEach((question, index) => {
+        const selected = state.answers[index];
+        const correctAnswer = question.a;
+        const isCorrect = selected === correctAnswer;
+
+        const item = el(
+            "div",
+            {
+                className: isCorrect ? "rc-result-item" : "rc-result-item rc-result-item--incorrect"
+            },
+            el("div", { className: "rc-result-stem", text: `${index + 1}. ${question.stem}` })
+        );
+
+        const list = el("ul", { className: "rc-result-choices" });
+        question.c.forEach((choice, choiceIndex) => {
+            let suffix = "";
+            if (choiceIndex === correctAnswer) {
+                suffix += " (correct)";
+            }
+            if (selected === choiceIndex && choiceIndex !== correctAnswer) {
+                suffix += " (your answer)";
+            }
+            const listItem = el("li", {
+                text: `${String.fromCharCode(65 + choiceIndex)}. ${choice}${suffix}`,
+                className: choiceIndex === correctAnswer ? "font-semibold" : ""
+            });
+            list.appendChild(listItem);
+        });
+
+        item.appendChild(list);
+
+        if (state.marked[index]) {
+            item.appendChild(el("div", { className: "rc-mark-tag", text: "MARKED" }));
+        }
+
+        container.appendChild(item);
     });
 
-    item.appendChild(list);
+    container.appendChild(
+        el(
+            "button",
+            {
+                className: "rc-button",
+                attrs: { type: "button" },
+                onClick: resetToIntro
+            },
+            "Back to Start"
+        )
+    );
 
-    if (state.marked[index]) {
-      item.appendChild(el("div", { className: "rc-mark-tag", text: "MARKED" }));
-    }
-
-    container.appendChild(item);
-  });
-
-  container.appendChild(
-    el(
-      "button",
-      {
-        className: "rc-button",
-        attrs: { type: "button" },
-        onClick: resetToIntro
-      },
-      "Back to Start"
-    )
-  );
-
-  return container;
+    return container;
 }
 
 function render() {
-  if (!root) {
-    return;
-  }
-  root.innerHTML = "";
+    if (!root) {
+        return;
+    }
+    root.innerHTML = "";
 
-  let view;
-  switch (state.view) {
-    case "intro":
-      view = renderIntro();
-      break;
-    case "test":
-      view = renderTest();
-      break;
-    case "review":
-      view = renderReview();
-      break;
-    case "results":
-      view = renderResults();
-      break;
-    default:
-      view = renderIntro();
-  }
+    let view;
+    switch (state.view) {
+        case "intro":
+            view = renderIntro();
+            break;
+        case "test":
+            view = renderTest();
+            break;
+        case "review":
+            view = renderReview();
+            break;
+        case "results":
+            view = renderResults();
+            break;
+        default:
+            view = renderIntro();
+    }
 
-  root.appendChild(view);
+    root.appendChild(view);
 }
 
 function init() {
-  loadProgress();
-  render();
-  scheduleTick();
-  applyExamButtonTheme();
+    loadProgress();
+    render();
+    scheduleTick();
+    applyExamButtonTheme();
 }
 
 if (root) {
-  init();
+    init();
 }
 // All test data organized by subject
 // Exam data is now loaded from separate files in each subject's folder
@@ -1057,7 +1057,7 @@ function getAllTestData() {
 
 // Create allTestData object that always returns current values
 const allTestData = new Proxy({}, {
-    get: function(target, prop) {
+    get: function (target, prop) {
         const data = getAllTestData();
         const value = data[prop];
         if (prop === 'General Chemistry') {
@@ -1068,11 +1068,11 @@ const allTestData = new Proxy({}, {
         }
         return value;
     },
-    has: function(target, prop) {
+    has: function (target, prop) {
         const data = getAllTestData();
         return prop in data;
     },
-    ownKeys: function(target) {
+    ownKeys: function (target) {
         const data = getAllTestData();
         return Object.keys(data);
     }
@@ -1101,7 +1101,7 @@ function resetTestCard(subjectName, testIndex) {
         // DO NOT call initializeSubjectPagesReact or displayTestList here
         // React component will re-render automatically based on state changes
         // Manual DOM manipulation causes removeChild errors
-        
+
         console.log('✅ Reset complete - React will handle re-rendering');
     } catch (error) {
         console.error('Error in resetTestCard:', error);
@@ -1188,11 +1188,11 @@ function reviewTestFromSubject(subjectName, testIndex, attemptNumber) {
     lastResultRecord = targetAttempt;
     lastQuestionCount = targetAttempt.total || lastQuestionCount || 0;
     detailedReviewQuestionIndex = 0;
-    
+
     // Set view mode to 'review' for detailed review  
     currentViewMode = 'review';
     saveFullExamState();
-    
+
     showDetailedReview();
 }
 
@@ -1217,19 +1217,34 @@ let highlightButtonPosition = { x: 0, y: 0 }; // Position for highlight button
 let currentViewMode = null; // Track current view: 'intro' | 'test' | 'review' | 'results'
 let examSubmitted = false; // Track whether the current exam attempt has been submitted
 
+function capturePassageState(passageText) {
+    if (!passageText) {
+        return null;
+    }
+
+    const paragraphNodes = Array.from(passageText.children).filter((child) => child.tagName === 'P');
+
+    if (paragraphNodes.length > 0) {
+        return paragraphNodes.map((node) => node.innerHTML);
+    }
+
+    const html = passageText.innerHTML;
+    return html ? [html] : null;
+}
+
 const REMOTE_EXAM_BUTTON_ENDPOINT = '/api/exam-button-config';
 const BUTTON_IMAGES = {
-  previous: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Prevoius.png',
-  next: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Next.png',
-  mark: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Mark.png',
-  review: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Review.png',
-  exhibit: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Exhibit.png',
-  end: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/End.png',
-  highlight: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Highlight%20button%20.png',
-  'review-marked': 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Review%20marked.png',
-  'review-all': 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Review%20all.png',
-  'review-incomplete': 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Review%20incomplete.png',
-  'mark-active': 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Marked%20active%20.png'
+    previous: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Prevoius.png',
+    next: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Next.png',
+    mark: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Mark.png',
+    review: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Review.png',
+    exhibit: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Exhibit.png',
+    end: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/End.png',
+    highlight: 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Highlight%20button%20.png',
+    'review-marked': 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Review%20marked.png',
+    'review-all': 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Review%20all.png',
+    'review-incomplete': 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Review%20incomplete.png',
+    'mark-active': 'https://yiapmshrkfqyypmdukrf.supabase.co/storage/v1/object/public/exam-button-assets/Marked%20active%20.png'
 };
 const REMOTE_EXAM_BUTTON_CACHE_KEY = 'cached_remote_exam_button_config';
 const REMOTE_EXAM_BUTTON_CACHE_EXPIRY_KEY = 'cached_remote_exam_button_config_expiry';
@@ -1237,246 +1252,246 @@ const REMOTE_EXAM_BUTTON_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 let remoteExamButtonFetchPromise = null;
 
 const EXAM_BUTTON_KEYS = [
-  'previous',
-  'next',
-  'mark',
-  'mark-active',
-  'review',
-  'exhibit',
-  'end',
-  'highlight',
-  'review-marked',
-  'review-all',
-  'review-incomplete'
+    'previous',
+    'next',
+    'mark',
+    'mark-active',
+    'review',
+    'exhibit',
+    'end',
+    'highlight',
+    'review-marked',
+    'review-all',
+    'review-incomplete'
 ];
 
 const DEFAULT_BUTTON_THEME = Object.freeze({
-  image: null,
-  useCustom: false,
-  useImage: true,
-  hidden: false
+    image: null,
+    useCustom: false,
+    useImage: true,
+    hidden: false
 });
 
 const createSuprasButtonTheme = (key, overrides = {}) => ({
-  image: BUTTON_IMAGES[key] || null,
-  useCustom: Boolean(BUTTON_IMAGES[key]),
-  useImage: true,
-  hidden: false,
-  ...overrides,
+    image: BUTTON_IMAGES[key] || null,
+    useCustom: Boolean(BUTTON_IMAGES[key]),
+    useImage: true,
+    hidden: false,
+    ...overrides,
 });
 
 const DEFAULT_EXAM_BUTTON_CONFIG = Object.freeze({
-  previous: createSuprasButtonTheme('previous'),
-  next: createSuprasButtonTheme('next'),
-  mark: createSuprasButtonTheme('mark'),
-  'mark-active': createSuprasButtonTheme('mark-active'),
-  review: createSuprasButtonTheme('review'),
-  exhibit: createSuprasButtonTheme('exhibit'),
-  end: createSuprasButtonTheme('end'),
-  highlight: createSuprasButtonTheme('highlight'),
-  'review-marked': createSuprasButtonTheme('review-marked'),
-  'review-all': createSuprasButtonTheme('review-all'),
-  'review-incomplete': createSuprasButtonTheme('review-incomplete'),
+    previous: createSuprasButtonTheme('previous'),
+    next: createSuprasButtonTheme('next'),
+    mark: createSuprasButtonTheme('mark'),
+    'mark-active': createSuprasButtonTheme('mark-active'),
+    review: createSuprasButtonTheme('review'),
+    exhibit: createSuprasButtonTheme('exhibit'),
+    end: createSuprasButtonTheme('end'),
+    highlight: createSuprasButtonTheme('highlight'),
+    'review-marked': createSuprasButtonTheme('review-marked'),
+    'review-all': createSuprasButtonTheme('review-all'),
+    'review-incomplete': createSuprasButtonTheme('review-incomplete'),
 });
 
 function extractExamButtonConfigPayload(rawConfig) {
-  if (!rawConfig || typeof rawConfig !== 'object') {
+    if (!rawConfig || typeof rawConfig !== 'object') {
+        return rawConfig;
+    }
+
+    if (rawConfig.buttons && typeof rawConfig.buttons === 'object') {
+        return rawConfig.buttons;
+    }
+
+    if (rawConfig.config && typeof rawConfig.config === 'object') {
+        return rawConfig.config;
+    }
+
+    if (rawConfig.theme && typeof rawConfig.theme === 'object') {
+        return rawConfig.theme;
+    }
+
     return rawConfig;
-  }
-
-  if (rawConfig.buttons && typeof rawConfig.buttons === 'object') {
-    return rawConfig.buttons;
-  }
-
-  if (rawConfig.config && typeof rawConfig.config === 'object') {
-    return rawConfig.config;
-  }
-
-  if (rawConfig.theme && typeof rawConfig.theme === 'object') {
-    return rawConfig.theme;
-  }
-
-  return rawConfig;
 }
 
 function normalizeExamButtonConfig(rawConfig) {
-  const payload = extractExamButtonConfigPayload(rawConfig);
-  const normalized = {};
-  const input = payload && typeof payload === 'object' ? payload : {};
+    const payload = extractExamButtonConfigPayload(rawConfig);
+    const normalized = {};
+    const input = payload && typeof payload === 'object' ? payload : {};
 
-  EXAM_BUTTON_KEYS.forEach((key) => {
-    const source = input[key] && typeof input[key] === 'object' ? input[key] : {};
-    normalized[key] = {
-      image: typeof source.image === 'string' ? source.image : null,
-      useCustom: source.useCustom === true,
-      useImage: source.useImage !== false,
-      hidden: source.hidden === true
-    };
+    EXAM_BUTTON_KEYS.forEach((key) => {
+        const source = input[key] && typeof input[key] === 'object' ? input[key] : {};
+        normalized[key] = {
+            image: typeof source.image === 'string' ? source.image : null,
+            useCustom: source.useCustom === true,
+            useImage: source.useImage !== false,
+            hidden: source.hidden === true
+        };
 
-    if (typeof source.label === 'string') {
-      normalized[key].label = source.label;
-    }
-    if (typeof source.imageHeight === 'number') {
-      normalized[key].imageHeight = source.imageHeight;
-    }
-  });
+        if (typeof source.label === 'string') {
+            normalized[key].label = source.label;
+        }
+        if (typeof source.imageHeight === 'number') {
+            normalized[key].imageHeight = source.imageHeight;
+        }
+    });
 
-  // Preserve any additional keys the remote config may include
-  Object.keys(input).forEach((key) => {
-    if (!normalized[key] && typeof input[key] === 'object') {
-      normalized[key] = { ...input[key] };
-    }
-  });
+    // Preserve any additional keys the remote config may include
+    Object.keys(input).forEach((key) => {
+        if (!normalized[key] && typeof input[key] === 'object') {
+            normalized[key] = { ...input[key] };
+        }
+    });
 
-  return normalized;
+    return normalized;
 }
 
 function readCachedRemoteExamButtonConfig() {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return null;
-  }
+    if (typeof window === 'undefined' || !window.localStorage) {
+        return null;
+    }
 
-  const cached = window.localStorage.getItem(REMOTE_EXAM_BUTTON_CACHE_KEY);
-  const expiry = window.localStorage.getItem(REMOTE_EXAM_BUTTON_CACHE_EXPIRY_KEY);
+    const cached = window.localStorage.getItem(REMOTE_EXAM_BUTTON_CACHE_KEY);
+    const expiry = window.localStorage.getItem(REMOTE_EXAM_BUTTON_CACHE_EXPIRY_KEY);
 
-  if (!cached || !expiry || Date.now() >= parseInt(expiry, 10)) {
-    return null;
-  }
+    if (!cached || !expiry || Date.now() >= parseInt(expiry, 10)) {
+        return null;
+    }
 
-  try {
-    return JSON.parse(cached);
-  } catch (err) {
-    console.warn('Failed to parse cached remote config', err);
-    return null;
-  }
+    try {
+        return JSON.parse(cached);
+    } catch (err) {
+        console.warn('Failed to parse cached remote config', err);
+        return null;
+    }
 }
 
 function writeCachedRemoteExamButtonConfig(config) {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return;
-  }
+    if (typeof window === 'undefined' || !window.localStorage) {
+        return;
+    }
 
-  try {
-    window.localStorage.setItem(REMOTE_EXAM_BUTTON_CACHE_KEY, JSON.stringify(config));
-    window.localStorage.setItem(
-      REMOTE_EXAM_BUTTON_CACHE_EXPIRY_KEY,
-      (Date.now() + REMOTE_EXAM_BUTTON_CACHE_DURATION).toString()
-    );
-  } catch (err) {
-    console.warn('Failed to cache remote button config', err);
-  }
+    try {
+        window.localStorage.setItem(REMOTE_EXAM_BUTTON_CACHE_KEY, JSON.stringify(config));
+        window.localStorage.setItem(
+            REMOTE_EXAM_BUTTON_CACHE_EXPIRY_KEY,
+            (Date.now() + REMOTE_EXAM_BUTTON_CACHE_DURATION).toString()
+        );
+    } catch (err) {
+        console.warn('Failed to cache remote button config', err);
+    }
 }
 
 function fetchRemoteExamButtonConfig(force = false) {
-  if (remoteExamButtonFetchPromise && !force) {
+    if (remoteExamButtonFetchPromise && !force) {
+        return remoteExamButtonFetchPromise;
+    }
+
+    if (typeof window === 'undefined' || typeof window.fetch !== 'function') {
+        return Promise.resolve(null);
+    }
+
+    remoteExamButtonFetchPromise = window
+        .fetch(REMOTE_EXAM_BUTTON_ENDPOINT, { cache: 'no-store' })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`Failed to load SUPRAS button config (${response.status})`);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            const normalized = normalizeExamButtonConfig(data);
+            writeCachedRemoteExamButtonConfig(normalized);
+            if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+                window.dispatchEvent(new Event('buttonThemeUpdated'));
+            }
+            return normalized;
+        })
+        .catch((error) => {
+            console.warn('Failed to fetch remote button config from SUPRAS', error);
+            return null;
+        })
+        .finally(() => {
+            remoteExamButtonFetchPromise = null;
+        });
+
     return remoteExamButtonFetchPromise;
-  }
-
-  if (typeof window === 'undefined' || typeof window.fetch !== 'function') {
-    return Promise.resolve(null);
-  }
-
-  remoteExamButtonFetchPromise = window
-    .fetch(REMOTE_EXAM_BUTTON_ENDPOINT, { cache: 'no-store' })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Failed to load SUPRAS button config (${response.status})`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const normalized = normalizeExamButtonConfig(data);
-      writeCachedRemoteExamButtonConfig(normalized);
-      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-        window.dispatchEvent(new Event('buttonThemeUpdated'));
-      }
-      return normalized;
-    })
-    .catch((error) => {
-      console.warn('Failed to fetch remote button config from SUPRAS', error);
-      return null;
-    })
-    .finally(() => {
-      remoteExamButtonFetchPromise = null;
-    });
-
-  return remoteExamButtonFetchPromise;
 }
 
 function getCachedRemoteExamButtonConfig(options = {}) {
-  const { refresh = true, force = false } = options;
-  const cached = readCachedRemoteExamButtonConfig();
-  if (cached) {
-    return normalizeExamButtonConfig(cached);
-  }
+    const { refresh = true, force = false } = options;
+    const cached = readCachedRemoteExamButtonConfig();
+    if (cached) {
+        return normalizeExamButtonConfig(cached);
+    }
 
-  if (refresh) {
-    fetchRemoteExamButtonConfig(force);
-  }
+    if (refresh) {
+        fetchRemoteExamButtonConfig(force);
+    }
 
-  return null;
+    return null;
 }
 
 if (typeof window !== 'undefined') {
-  // Kick off a fetch early so SUPRAS assets are applied ASAP
-  getCachedRemoteExamButtonConfig();
+    // Kick off a fetch early so SUPRAS assets are applied ASAP
+    getCachedRemoteExamButtonConfig();
 
-  window.addEventListener('buttonThemeUpdated', () => {
-    try {
-      applyExamButtonTheme();
-    } catch (err) {
-      console.warn('Failed to apply remote exam button theme', err);
-    }
-  });
+    window.addEventListener('buttonThemeUpdated', () => {
+        try {
+            applyExamButtonTheme();
+        } catch (err) {
+            console.warn('Failed to apply remote exam button theme', err);
+        }
+    });
 }
 
 function getStoredExamButtonConfig() {
-	const remote = getCachedRemoteExamButtonConfig();
-	if (remote) {
-		return remote;
-	}
+    const remote = getCachedRemoteExamButtonConfig();
+    if (remote) {
+        return remote;
+    }
 
-	if (typeof window !== 'undefined' && window.localStorage) {
-		const candidateKeys = [
-			'exam_button_theme',
-			'oat_exam_button_theme',
-			'exam_button_config',
-			'test_button_theme',
-			'button_theme_config'
-		];
+    if (typeof window !== 'undefined' && window.localStorage) {
+        const candidateKeys = [
+            'exam_button_theme',
+            'oat_exam_button_theme',
+            'exam_button_config',
+            'test_button_theme',
+            'button_theme_config'
+        ];
 
-		for (const key of candidateKeys) {
-			try {
-				const raw = window.localStorage.getItem(key);
-				if (!raw) continue;
-				const parsed = JSON.parse(raw);
-				return normalizeExamButtonConfig(parsed);
-			} catch (err) {
-				console.warn('Failed to parse button config for key', key, err);
-			}
-		}
+        for (const key of candidateKeys) {
+            try {
+                const raw = window.localStorage.getItem(key);
+                if (!raw) continue;
+                const parsed = JSON.parse(raw);
+                return normalizeExamButtonConfig(parsed);
+            } catch (err) {
+                console.warn('Failed to parse button config for key', key, err);
+            }
+        }
 
-		try {
-			for (let i = 0; i < window.localStorage.length; i++) {
-				const key = window.localStorage.key(i);
-				if (!key) continue;
-				const raw = window.localStorage.getItem(key);
-				if (!raw || !raw.includes('"previous"') || !raw.includes('"next"')) continue;
-				try {
-					const parsed = JSON.parse(raw);
-					if (parsed && typeof parsed === 'object' && parsed.previous && parsed.next) {
-						return normalizeExamButtonConfig(parsed);
-					}
-				} catch (err) {
-					// Ignore parse errors for unrelated keys
-				}
-			}
-		} catch (err) {
-			console.warn('Failed to scan localStorage for button config:', err);
-		}
-	}
+        try {
+            for (let i = 0; i < window.localStorage.length; i++) {
+                const key = window.localStorage.key(i);
+                if (!key) continue;
+                const raw = window.localStorage.getItem(key);
+                if (!raw || !raw.includes('"previous"') || !raw.includes('"next"')) continue;
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object' && parsed.previous && parsed.next) {
+                        return normalizeExamButtonConfig(parsed);
+                    }
+                } catch (err) {
+                    // Ignore parse errors for unrelated keys
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to scan localStorage for button config:', err);
+        }
+    }
 
-	return normalizeExamButtonConfig(DEFAULT_EXAM_BUTTON_CONFIG);
+    return normalizeExamButtonConfig(DEFAULT_EXAM_BUTTON_CONFIG);
 }
 
 function setExamButtonContent(buttonElement, buttonKey, label, config, options = {}) {
@@ -1497,50 +1512,50 @@ function setExamButtonContent(buttonElement, buttonKey, label, config, options =
 
     const shouldShowLabel = keepLabel || !(buttonTheme && buttonTheme.useCustom && buttonTheme.image);
 
-	if (buttonTheme && buttonTheme.useCustom && buttonTheme.image) {
-		// Clearcoat button with custom image
-		buttonElement.classList.remove('clearcoat-button-default');
-		buttonElement.classList.add('clearcoat-button');
+    if (buttonTheme && buttonTheme.useCustom && buttonTheme.image) {
+        // Clearcoat button with custom image
+        buttonElement.classList.remove('clearcoat-button-default');
+        buttonElement.classList.add('clearcoat-button');
         buttonElement.innerHTML = '';
-        
+
         const img = document.createElement('img');
         img.src = buttonTheme.image;
         img.alt = label || '';
         img.className = 'button-skin';
         const height = parseInt(buttonElement.dataset.buttonHeight, 10) || imageHeight;
         img.style.height = `${height}px`;
-        
+
         buttonElement.appendChild(img);
-    	} else {
-		// Clearcoat default button - no text, just glassy box
-		buttonElement.classList.remove('clearcoat-button');
-		buttonElement.classList.add('clearcoat-button-default');
-		buttonElement.textContent = '';
-		if (shouldShowLabel && label) {
-			const span = document.createElement('span');
-			span.className = 'exam-btn-label';
-			span.textContent = label;
-			buttonElement.appendChild(span);
-		}
-	}
+    } else {
+        // Clearcoat default button - no text, just glassy box
+        buttonElement.classList.remove('clearcoat-button');
+        buttonElement.classList.add('clearcoat-button-default');
+        buttonElement.textContent = '';
+        if (shouldShowLabel && label) {
+            const span = document.createElement('span');
+            span.className = 'exam-btn-label';
+            span.textContent = label;
+            buttonElement.appendChild(span);
+        }
+    }
 }
 
 function applyExamButtonTheme() {
     // ALWAYS read fresh config from localStorage - NO CACHING
     const config = getStoredExamButtonConfig();
     console.log('buttonConfig in exam layout (FRESH from localStorage)', config);
-    
+
     // HELPER: Attach handler to button and its image - ENSURES FUNCTIONALITY IS TRANSFERRED
     function attachButtonHandler(button, handler) {
         if (!button || !handler) return;
-        
+
         // Attach click handler - instant response
-        button.onclick = function(e) {
+        button.onclick = function (e) {
             if (!button.disabled) {
                 handler.call(this, e);
             }
         };
-        
+
         // Ensure image never blocks clicks
         const img = button.querySelector('.button-skin');
         if (img) {
@@ -1578,7 +1593,7 @@ function applyExamButtonTheme() {
             label = 'END SECTION';
         }
         setExamButtonContent(nextBtn, 'next', label, config);
-        attachButtonHandler(nextBtn, function() {
+        attachButtonHandler(nextBtn, function () {
             const test = allTestData[currentSubject] && allTestData[currentSubject][currentTestIndex];
             if (test && currentQuestionIndex === test.length - 1) {
                 if (typeof window.showEndTestModalReact === 'function') {
@@ -1596,7 +1611,7 @@ function applyExamButtonTheme() {
     const reviewBtn = document.getElementById('test-review-btn');
     if (reviewBtn) {
         setExamButtonContent(reviewBtn, 'review', 'REVIEW', config);
-        attachButtonHandler(reviewBtn, function() {
+        attachButtonHandler(reviewBtn, function () {
             const act = () => {
                 if (typeof showReviewView === 'function') {
                     showReviewView();
@@ -1662,7 +1677,7 @@ function applyExamButtonTheme() {
     const reviewEndBtn = document.getElementById('review-end-btn');
     if (reviewEndBtn) {
         setExamButtonContent(reviewEndBtn, 'end', 'END', config);
-        attachButtonHandler(reviewEndBtn, function() {
+        attachButtonHandler(reviewEndBtn, function () {
             if (typeof window.showEndTestModalReact === 'function') {
                 window.showEndTestModalReact();
             } else {
@@ -1685,18 +1700,18 @@ function applyExamButtonTheme() {
 
 // Expose getStoredExamButtonConfig to window for React components
 if (typeof window !== 'undefined') {
-	window.getStoredExamButtonConfig = getStoredExamButtonConfig;
-	
+    window.getStoredExamButtonConfig = getStoredExamButtonConfig;
+
     // Helper function for React components to render button with custom image
-    window.renderExamButton = function(buttonKey, defaultLabel, buttonElement, onClickHandler) {
+    window.renderExamButton = function (buttonKey, defaultLabel, buttonElement, onClickHandler) {
         if (!buttonElement) return;
-        
+
         const config = getStoredExamButtonConfig();
         const buttonTheme = config && config[buttonKey];
-        
+
         // Store original onclick - prefer the explicit handler parameter
         const originalOnClick = onClickHandler || buttonElement.onclick;
-        
+
         if (buttonKey) {
             buttonElement.dataset.buttonKey = buttonKey;
         } else {
@@ -1708,7 +1723,7 @@ if (typeof window !== 'undefined') {
             buttonElement.classList.remove('clearcoat-button-default');
             buttonElement.classList.add('clearcoat-button');
             buttonElement.innerHTML = '';
-            
+
             // Create image
             const img = document.createElement('img');
             img.src = buttonTheme.image;
@@ -1716,42 +1731,42 @@ if (typeof window !== 'undefined') {
             img.className = 'button-skin';
             const height = parseInt(buttonElement.dataset.buttonHeight, 10) || 28;
             img.style.height = `${height}px`;
-            
+
             // Wire up click handler DIRECTLY - instant response
             if (originalOnClick) {
-                buttonElement.onclick = function(e) {
+                buttonElement.onclick = function (e) {
                     if (!buttonElement.disabled) {
                         originalOnClick.call(this, e);
                     }
                 };
             }
-            
+
             buttonElement.appendChild(img);
         } else {
             // Clearcoat default button - no text, just glassy box
             buttonElement.classList.remove('clearcoat-button');
             buttonElement.classList.add('clearcoat-button-default');
             buttonElement.textContent = '';
-            
+
             // Restore onclick
             if (originalOnClick) {
                 buttonElement.onclick = originalOnClick;
             }
         }
     };
-    
+
     // Auto-apply button configs to React components when they mount
     // Use MutationObserver to detect when React components render buttons
     if (typeof MutationObserver !== 'undefined') {
         const buttonObserver = new MutationObserver((mutations) => {
             let shouldUpdate = false;
-            
+
             // Check if highlight buttons or other exam buttons were added/modified
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach((node) => {
                         if (node.nodeType === 1) { // Element node
-                            if (node.id === 'test-highlight-toggle' || 
+                            if (node.id === 'test-highlight-toggle' ||
                                 node.id === 'review-highlight-toggle' ||
                                 (node.querySelector && (
                                     node.querySelector('#test-highlight-toggle') ||
@@ -1763,7 +1778,7 @@ if (typeof window !== 'undefined') {
                     });
                 }
             });
-            
+
             // Always apply button themes (in case buttons were re-rendered)
             if (shouldUpdate) {
                 requestAnimationFrame(() => {
@@ -1771,7 +1786,7 @@ if (typeof window !== 'undefined') {
                 });
             }
         });
-        
+
         // Observe the document body for changes so that newly-added exam buttons
         // also receive the configured themes without touching legacy highlight
         // footer buttons.
@@ -1870,9 +1885,9 @@ let taggedSubjectFilter = 'all'; // Track subject filter for tagged questions
 // --- OAT Scoring Maps ---
 // Initialize on window to avoid const redeclaration conflicts
 // These will be shared between script.js and subject-pages-react.jsx
-(function() {
+(function () {
     'use strict';
-    
+
     // Only initialize if not already defined
     if (typeof window.TOTAL_QUESTIONS_BIOLOGY === 'undefined') {
         window.TOTAL_QUESTIONS_BIOLOGY = 40;
@@ -1881,7 +1896,7 @@ let taggedSubjectFilter = 'all'; // Track subject filter for tagged questions
         window.TOTAL_QUESTIONS_PHYSICS = 40;
         window.TOTAL_QUESTIONS_QUANTITATIVE = 40;
     }
-    
+
     if (typeof window.SCORE_MAP_40 === 'undefined') {
         window.SCORE_MAP_40 = {
             0: 200, 1: 200, 2: 200, 3: 200, 4: 200, 5: 200, 6: 210, 7: 220, 8: 230, 9: 240, 10: 250,
@@ -1889,14 +1904,14 @@ let taggedSubjectFilter = 'all'; // Track subject filter for tagged questions
             21: 290, 22: 300, 23: 300, 24: 310, 25: 310, 26: 320, 27: 320, 28: 330, 29: 330, 30: 340,
             31: 350, 32: 360, 33: 370, 34: 370, 35: 380, 36: 390, 37: 390, 38: 400, 39: 400, 40: 400
         };
-        
+
         window.SCORE_MAP_30 = {
             0: 200, 1: 200, 2: 200, 3: 200, 4: 210, 5: 220, 6: 230, 7: 240, 8: 250, 9: 260, 10: 270,
             11: 280, 12: 290, 13: 290, 14: 290, 15: 290,
             16: 300, 17: 310, 18: 320, 19: 330, 20: 340, 21: 350, 22: 360, 23: 370, 24: 380, 25: 390,
             26: 400, 27: 400, 28: 400, 29: 400, 30: 400
         };
-        
+
         window.SCORE_MAP_50 = {
             0: 200, 1: 200, 2: 200, 3: 200, 4: 200, 5: 200, 6: 200, 7: 200, 8: 200, 9: 200, 10: 200,
             11: 200, 12: 200, 13: 200, 14: 200, 15: 210, 16: 220, 17: 230, 18: 240, 19: 250, 20: 260,
@@ -1911,19 +1926,19 @@ let taggedSubjectFilter = 'all'; // Track subject filter for tagged questions
 function calculateOATScore(correct, totalQuestions, subject) {
     if (correct < 0) return 200;
     if (correct > totalQuestions) correct = totalQuestions;
-    
+
     let scoreMap = window.SCORE_MAP_40; // Default for Biology, Physics, Quantitative Reasoning
-    
+
     // Determine which score map to use based on subject or total questions
     const TOTAL_QUESTIONS_CHEMISTRY = window.TOTAL_QUESTIONS_CHEMISTRY || 30;
     const TOTAL_QUESTIONS_READING = window.TOTAL_QUESTIONS_READING || 50;
-    
+
     if (subject === 'General Chemistry' || subject === 'Organic Chemistry' || totalQuestions === TOTAL_QUESTIONS_CHEMISTRY) {
         scoreMap = window.SCORE_MAP_30;
     } else if (subject === 'Reading Comprehension' || totalQuestions === TOTAL_QUESTIONS_READING) {
         scoreMap = window.SCORE_MAP_50;
     }
-    
+
     return scoreMap[correct] || 200;
 }
 
@@ -1951,7 +1966,7 @@ function saveFullExamState() {
         if (!currentSubject || currentTestIndex === null || currentTestIndex === undefined) {
             return;
         }
-        
+
         const storageKey = getTestStateStorageKey(currentSubject, currentTestIndex);
         if (!storageKey) {
             console.warn('Cannot save: invalid storage key');
@@ -1971,39 +1986,39 @@ function saveFullExamState() {
             }
             return;
         }
-        
+
         // Save ALL state - even if empty or partial
         // This ensures we can restore preview states, empty states, etc.
         const state = {
             // Core test state (always save, even if empty)
             currentQuestionIndex: currentQuestionIndex !== undefined ? currentQuestionIndex : 0,
-            userAnswers: userAnswers ? {...userAnswers} : {},
-            markedQuestions: markedQuestions ? {...markedQuestions} : {},
-            
+            userAnswers: userAnswers ? { ...userAnswers } : {},
+            markedQuestions: markedQuestions ? { ...markedQuestions } : {},
+
             // View mode tracking (save current view: 'intro', 'test', 'review', 'results', or null)
             viewMode: currentViewMode !== undefined ? currentViewMode : null,
             detailedReviewQuestionIndex: detailedReviewQuestionIndex !== undefined ? detailedReviewQuestionIndex : 0,
-            
+
             // Time tracking (save even if null/undefined)
             timeRemaining: timeRemaining !== undefined ? timeRemaining : null,
             testStartTime: testStartTime !== undefined ? testStartTime : null,
-            questionTimeSpent: questionTimeSpent ? {...questionTimeSpent} : {},
-            questionStartTime: questionStartTime ? {...questionStartTime} : {},
-            
+            questionTimeSpent: questionTimeSpent ? { ...questionTimeSpent } : {},
+            questionStartTime: questionStartTime ? { ...questionStartTime } : {},
+
             // Exam settings (save current settings)
             prometricDelay: prometricDelay !== undefined ? Boolean(prometricDelay) : false,
             timeAccommodations: timeAccommodations !== undefined ? Boolean(timeAccommodations) : false,
-            
+
             // UI state (save highlights even if empty)
-            highlights: highlights ? {...highlights} : {},
-            passageHighlights: passageHighlights ? {...passageHighlights} : {},
+            highlights: highlights ? { ...highlights } : {},
+            passageHighlights: passageHighlights ? { ...passageHighlights } : {},
             highlightCounter: highlightCounter !== undefined ? highlightCounter : 0,
-            
+
             // Metadata
             timestamp: Date.now(),
             savedAt: new Date().toISOString()
         };
-        
+
         localStorage.setItem(storageKey, JSON.stringify(state));
         console.log('💾 Auto-saved exam state:', storageKey, {
             questionIndex: state.currentQuestionIndex,
@@ -2026,20 +2041,20 @@ function loadFullExamState(subject, testIndex) {
         if (!subject || testIndex === null || testIndex === undefined) {
             return null;
         }
-        
+
         const storageKey = getTestStateStorageKey(subject, testIndex);
         if (!storageKey) {
             return null;
         }
-        
+
         const saved = localStorage.getItem(storageKey);
-        
+
         if (!saved) {
             // No saved state - this is a fresh start
             console.log('📥 No saved state found for:', storageKey);
             return null;
         }
-        
+
         // Parse saved state - handle corrupted JSON gracefully
         let state;
         try {
@@ -2050,45 +2065,45 @@ function loadFullExamState(subject, testIndex) {
             localStorage.removeItem(storageKey);
             return null;
         }
-        
+
         // Validate state structure - ensure it has at least basic structure
         if (typeof state !== 'object' || state === null) {
             console.warn('Invalid state structure, clearing:', storageKey);
             localStorage.removeItem(storageKey);
             return null;
         }
-        
+
         // Normalize state - ensure all expected fields exist with defaults
         const normalizedState = {
             // Core test state (with defaults for missing fields)
             currentQuestionIndex: typeof state.currentQuestionIndex === 'number' ? state.currentQuestionIndex : 0,
             userAnswers: state.userAnswers && typeof state.userAnswers === 'object' ? state.userAnswers : {},
             markedQuestions: state.markedQuestions && typeof state.markedQuestions === 'object' ? state.markedQuestions : {},
-            
+
             // View mode (can be null for intro)
             viewMode: state.viewMode !== undefined ? state.viewMode : null,
             detailedReviewQuestionIndex: typeof state.detailedReviewQuestionIndex === 'number' ? state.detailedReviewQuestionIndex : 0,
-            
+
             // Time tracking (can be null)
             timeRemaining: state.timeRemaining !== undefined ? state.timeRemaining : null,
             testStartTime: state.testStartTime !== undefined ? state.testStartTime : null,
             questionTimeSpent: state.questionTimeSpent && typeof state.questionTimeSpent === 'object' ? state.questionTimeSpent : {},
             questionStartTime: state.questionStartTime && typeof state.questionStartTime === 'object' ? state.questionStartTime : {},
-            
+
             // Exam settings (with defaults)
             prometricDelay: state.prometricDelay !== undefined ? Boolean(state.prometricDelay) : false,
             timeAccommodations: state.timeAccommodations !== undefined ? Boolean(state.timeAccommodations) : false,
-            
+
             // UI state (with defaults)
             highlights: state.highlights && typeof state.highlights === 'object' ? state.highlights : {},
             passageHighlights: state.passageHighlights && typeof state.passageHighlights === 'object' ? state.passageHighlights : {},
             highlightCounter: typeof state.highlightCounter === 'number' ? state.highlightCounter : 0,
-            
+
             // Metadata
             timestamp: state.timestamp || Date.now(),
             savedAt: state.savedAt || new Date().toISOString()
         };
-        
+
         console.log('📥 Loaded exam state:', storageKey, {
             questionIndex: normalizedState.currentQuestionIndex,
             answers: Object.keys(normalizedState.userAnswers).length,
@@ -2096,7 +2111,7 @@ function loadFullExamState(subject, testIndex) {
             timeRemaining: normalizedState.timeRemaining,
             viewMode: normalizedState.viewMode
         });
-        
+
         return normalizedState;
     } catch (e) {
         console.error('Failed to load full exam state:', e);
@@ -2108,40 +2123,40 @@ function loadFullExamState(subject, testIndex) {
 // Handles partial states - applies only what exists, uses defaults for missing fields
 function applyLoadedExamState(loadedState) {
     if (!loadedState) return false;
-    
+
     try {
         // Core test state (always apply, even if empty)
         currentQuestionIndex = typeof loadedState.currentQuestionIndex === 'number' ? loadedState.currentQuestionIndex : 0;
-        userAnswers = loadedState.userAnswers && typeof loadedState.userAnswers === 'object' ? {...loadedState.userAnswers} : {};
-        markedQuestions = loadedState.markedQuestions && typeof loadedState.markedQuestions === 'object' ? {...loadedState.markedQuestions} : {};
-        
+        userAnswers = loadedState.userAnswers && typeof loadedState.userAnswers === 'object' ? { ...loadedState.userAnswers } : {};
+        markedQuestions = loadedState.markedQuestions && typeof loadedState.markedQuestions === 'object' ? { ...loadedState.markedQuestions } : {};
+
         // View mode (can be null for intro view)
         currentViewMode = loadedState.viewMode !== undefined ? loadedState.viewMode : null;
         detailedReviewQuestionIndex = typeof loadedState.detailedReviewQuestionIndex === 'number' ? loadedState.detailedReviewQuestionIndex : 0;
-        
+
         // Time tracking (handle null/undefined gracefully)
         timeRemaining = loadedState.timeRemaining !== undefined && loadedState.timeRemaining !== null ? loadedState.timeRemaining : null;
         testStartTime = loadedState.testStartTime !== undefined && loadedState.testStartTime !== null ? loadedState.testStartTime : null;
-        
+
         // Adjust time remaining if test was in progress
         if (testStartTime && timeRemaining !== null && loadedState.timestamp) {
             const savedTimestamp = loadedState.timestamp;
             const secondsElapsed = Math.floor((Date.now() - savedTimestamp) / 1000);
             timeRemaining = Math.max(0, timeRemaining - secondsElapsed);
         }
-        
-        questionTimeSpent = loadedState.questionTimeSpent && typeof loadedState.questionTimeSpent === 'object' ? {...loadedState.questionTimeSpent} : {};
-        questionStartTime = loadedState.questionStartTime && typeof loadedState.questionStartTime === 'object' ? {...loadedState.questionStartTime} : {};
-        
+
+        questionTimeSpent = loadedState.questionTimeSpent && typeof loadedState.questionTimeSpent === 'object' ? { ...loadedState.questionTimeSpent } : {};
+        questionStartTime = loadedState.questionStartTime && typeof loadedState.questionStartTime === 'object' ? { ...loadedState.questionStartTime } : {};
+
         // Exam settings (apply with defaults)
         prometricDelay = loadedState.prometricDelay !== undefined ? Boolean(loadedState.prometricDelay) : false;
         timeAccommodations = loadedState.timeAccommodations !== undefined ? Boolean(loadedState.timeAccommodations) : false;
-        
+
         // UI state (apply with defaults)
-        highlights = loadedState.highlights && typeof loadedState.highlights === 'object' ? {...loadedState.highlights} : {};
-        passageHighlights = loadedState.passageHighlights && typeof loadedState.passageHighlights === 'object' ? {...loadedState.passageHighlights} : {};
+        highlights = loadedState.highlights && typeof loadedState.highlights === 'object' ? { ...loadedState.highlights } : {};
+        passageHighlights = loadedState.passageHighlights && typeof loadedState.passageHighlights === 'object' ? { ...loadedState.passageHighlights } : {};
         highlightCounter = typeof loadedState.highlightCounter === 'number' ? loadedState.highlightCounter : 0;
-        
+
         console.log('✅ Exam state applied:', {
             questionIndex: currentQuestionIndex,
             answers: Object.keys(userAnswers).length,
@@ -2149,7 +2164,7 @@ function applyLoadedExamState(loadedState) {
             timeRemaining: timeRemaining,
             viewMode: currentViewMode
         });
-        
+
         return true;
     } catch (e) {
         console.error('Failed to apply loaded exam state:', e);
@@ -2165,13 +2180,13 @@ function clearFullExamState(subject, testIndex) {
             console.warn('Invalid parameters for clearFullExamState:', { subject, testIndex });
             return;
         }
-        
+
         const storageKey = getTestStateStorageKey(subject, testIndex);
         if (storageKey) {
             localStorage.removeItem(storageKey);
             console.log('🗑️ Cleared exam state from localStorage:', storageKey);
         }
-        
+
         // Also clear legacy state keys for backwards compatibility
         try {
             const legacyKey = getTestStateKey(subject, testIndex);
@@ -2181,7 +2196,7 @@ function clearFullExamState(subject, testIndex) {
         } catch (e) {
             // Ignore legacy key errors
         }
-        
+
         // Clear any highlight-related keys
         try {
             const highlightKeys = [
@@ -2198,7 +2213,7 @@ function clearFullExamState(subject, testIndex) {
         } catch (e) {
             // Ignore highlight key errors
         }
-        
+
     } catch (e) {
         console.error('Failed to clear full exam state:', e);
     }
@@ -2242,10 +2257,10 @@ function resetAllExams() {
     if (!confirmed) {
         return false;
     }
-    
+
     try {
         console.log('🗑️ Starting full reset of all exam user state...');
-        
+
         // Stop any active test timer
         if (testTimer) {
             try {
@@ -2255,7 +2270,7 @@ function resetAllExams() {
                 console.warn('Error clearing timer during reset:', timerError);
             }
         }
-        
+
         // Reset all in-memory state variables to defaults
         currentSubject = null;
         currentTestIndex = null;
@@ -2276,7 +2291,7 @@ function resetAllExams() {
         lastQuestionCount = 0;
         prometricDelay = false;
         timeAccommodations = false;
-        
+
         // Get all localStorage keys first (before any operations)
         let allKeys = [];
         try {
@@ -2286,7 +2301,7 @@ function resetAllExams() {
             alert('Error accessing localStorage. Please refresh the page and try again.');
             return false;
         }
-        
+
         // Define all prefixes that indicate test-related user state
         // IMPORTANT: Only clear user state, NOT exam configuration
         const userStatePrefixes = [
@@ -2300,21 +2315,21 @@ function resetAllExams() {
             'tagged-',                     // Tagged questions (legacy format)
             'strikethrough-'               // Strikethrough markings
         ];
-        
+
         // Also clear specific keys that don't use prefixes
         const specificKeysToClear = [
             'tagged_questions'             // Tagged questions (current format)
         ];
-        
+
         let clearedCount = 0;
-        
+
         // Clear all keys that match user state prefixes
         // This clears user data but preserves exam configuration
         for (const key of allKeys) {
             try {
                 // Check if this key should be cleared (user state, not config)
                 let shouldClear = false;
-                
+
                 // Check prefixes
                 for (const prefix of userStatePrefixes) {
                     if (key.startsWith(prefix)) {
@@ -2322,7 +2337,7 @@ function resetAllExams() {
                         break;
                     }
                 }
-                
+
                 // Check specific keys
                 if (!shouldClear) {
                     for (const specificKey of specificKeysToClear) {
@@ -2332,7 +2347,7 @@ function resetAllExams() {
                         }
                     }
                 }
-                
+
                 if (shouldClear) {
                     localStorage.removeItem(key);
                     clearedCount++;
@@ -2342,22 +2357,22 @@ function resetAllExams() {
                 console.warn(`Could not remove key ${key}:`, e);
             }
         }
-        
+
         console.log(`✅ Cleared ${clearedCount} user state entries from localStorage`);
         console.log('✅ All in-memory state reset to defaults');
         console.log('✅ Exam configuration preserved (max attempts, duration, etc.)');
-        
+
         // Set a flag to prevent React initialization errors during reload
         try {
             sessionStorage.setItem('reset-in-progress', 'true');
         } catch (e) {
             // Ignore if sessionStorage is not available
         }
-        
+
         // Reload immediately - don't wait, don't interact with React
         // After reload, all tests will show as "Not Started" because attempt history is cleared
         window.location.href = window.location.href;
-        
+
         return true;
     } catch (error) {
         console.error('Error during reset:', error);
@@ -2389,9 +2404,9 @@ function performTestReset(subject, index) {
             console.error('Invalid parameters for performTestReset:', { subject, index });
             return false;
         }
-        
+
         console.log('🔄 Starting REAL reset for:', subject, 'Test', index);
-        
+
         // Step 1: Stop any active test timer (no DOM manipulation, just clear interval)
         if (testTimer) {
             try {
@@ -2401,7 +2416,7 @@ function performTestReset(subject, index) {
                 console.warn('Error clearing timer during reset:', timerError);
             }
         }
-        
+
         // Step 2: Clear localStorage for this exam (comprehensive)
         // NO DOM manipulation - just localStorage operations
         try {
@@ -2409,14 +2424,14 @@ function performTestReset(subject, index) {
         } catch (e) {
             console.warn('Error clearing full exam state:', e);
         }
-        
+
         // Clear legacy state keys
         try {
             clearTestState(subject, index);
         } catch (e) {
             console.warn('Error clearing legacy test state:', e);
         }
-        
+
         // Clear completed test data
         try {
             const completedKey = `completed-test-${subject}-${index}`;
@@ -2425,14 +2440,14 @@ function performTestReset(subject, index) {
         } catch (e) {
             console.warn('Error removing completed test key:', e);
         }
-        
+
         // Clear test attempts
         try {
             resetTestAttempts(subject, index);
         } catch (e) {
             console.warn('Error in resetTestAttempts:', e);
         }
-        
+
         // Clear completed tests list entry
         try {
             const listKey = 'completed-tests-list';
@@ -2448,7 +2463,7 @@ function performTestReset(subject, index) {
         } catch (e) {
             console.warn('Error updating completed tests list:', e);
         }
-        
+
         // Clear InstantDB state if available (for authenticated users)
         try {
             if (window.InstantDB && typeof window.InstantDB.clearTestState === 'function') {
@@ -2458,7 +2473,7 @@ function performTestReset(subject, index) {
         } catch (e) {
             console.warn('Error clearing InstantDB state:', e);
         }
-        
+
         // Clear any additional localStorage keys that might exist
         try {
             const additionalKeys = [
@@ -2478,7 +2493,7 @@ function performTestReset(subject, index) {
         } catch (e) {
             console.warn('Error clearing additional keys:', e);
         }
-        
+
         // Step 3: Set reset flag so reload doesn't restore state
         // This flag persists in localStorage and is checked on next load
         try {
@@ -2488,7 +2503,7 @@ function performTestReset(subject, index) {
         } catch (e) {
             console.warn('Error setting reset flag:', e);
         }
-        
+
         // Step 4: Reset in-memory state to defaults (ALWAYS, even if not current test)
         // This ensures state is clean if user switches to this test later
         // NO DOM manipulation - just state variable assignments
@@ -2508,9 +2523,9 @@ function performTestReset(subject, index) {
             highlightCounter = 0;
             prometricDelay = false;
             timeAccommodations = false;
-            
+
             console.log('✅ In-memory state reset to defaults');
-            
+
             // Step 5: Ensure state is completely cleared (double-check)
             // This prevents any auto-save from restoring old state immediately
             try {
@@ -2522,7 +2537,7 @@ function performTestReset(subject, index) {
             } catch (e) {
                 console.warn('Error ensuring state is cleared:', e);
             }
-            
+
             // Step 6: Return to intro view (state-based navigation, no DOM manipulation)
             // Only if this is the currently active test
             // showView just changes which view is displayed - it doesn't manipulate DOM nodes
@@ -2546,7 +2561,7 @@ function performTestReset(subject, index) {
                 console.warn('Error ensuring state is cleared:', e);
             }
         }
-        
+
         console.log('✅ REAL reset complete for:', subject, 'Test', index);
         console.log('✅ Reset will persist after page reload');
         return true;
@@ -2560,27 +2575,27 @@ function performTestReset(subject, index) {
 // This must be set up early, before React components are initialized
 (function setupReactErrorSuppression() {
     // Handle synchronous errors
-    window.addEventListener('error', function(event) {
+    window.addEventListener('error', function (event) {
         // Check if this is a NotFoundError related to removeChild
         // Match the exact error: "Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node."
         const errorMsg = (event.error && event.error.message) || event.message || '';
         const errorName = (event.error && event.error.name) || '';
-        
+
         const isNotFoundError = (
             errorName === 'NotFoundError' ||
             (event.error && event.error.constructor && event.error.constructor.name === 'NotFoundError') ||
             errorMsg.includes('NotFoundError')
         );
-        
+
         // Check if this is a removeChild error - match various patterns
         const isRemoveChildError = (
-            errorMsg.includes('removeChild') || 
+            errorMsg.includes('removeChild') ||
             errorMsg.includes('Failed to execute \'removeChild\'') ||
             errorMsg.includes('Failed to execute "removeChild"') ||
             errorMsg.includes('not a child') ||
             errorMsg.includes('node to be removed is not a child')
         );
-        
+
         // Suppress NotFoundError or removeChild errors - these are harmless React cleanup issues
         if (isNotFoundError || isRemoveChildError) {
             // Don't log to console at all - silently suppress
@@ -2589,12 +2604,12 @@ function performTestReset(subject, index) {
             event.stopImmediatePropagation(); // Stop all event handlers
             return true; // Indicate error was handled
         }
-        
+
         return false; // Let other errors through
     }, true); // Use capture phase
-    
+
     // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', function(event) {
+    window.addEventListener('unhandledrejection', function (event) {
         if (event.reason) {
             const reason = event.reason;
             const isNotFoundError = (
@@ -2603,10 +2618,10 @@ function performTestReset(subject, index) {
                 (reason.message && reason.message.includes('NotFoundError'))
             );
             const isRemoveChildError = reason.message && (
-                reason.message.includes('removeChild') || 
+                reason.message.includes('removeChild') ||
                 reason.message.includes('Failed to execute \'removeChild\'')
             );
-            
+
             if (isNotFoundError || isRemoveChildError) {
                 const errorMsg = reason.message || 'Unknown rejection';
                 console.warn('Suppressed React cleanup promise rejection (harmless):', errorMsg);
@@ -2801,6 +2816,22 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Get passage key for current question (supports passageId)
+function getCurrentPassageKey(index = currentQuestionIndex) {
+    if (!currentSubject || currentTestIndex === null || index === null) return null;
+
+    const test = allTestData[currentSubject] && allTestData[currentSubject][currentTestIndex];
+    const question = test && test[index];
+
+    if (question && question.passageId) {
+        return `${currentSubject}-${currentTestIndex}-passage-${question.passageId}`;
+    }
+
+    // Fallback for old structure
+    const passageIndex = Math.floor(index / 17);
+    return `${currentSubject}-${currentTestIndex}-passage-${passageIndex}`;
+}
+
 // Get highlight key for current question
 function getHighlightKey() {
     return `${currentSubject}-${currentTestIndex}-${currentQuestionIndex}`;
@@ -2824,7 +2855,7 @@ function setupHighlightListeners() {
     const contentArea = document.getElementById('test-content-area');
     const passageText = document.getElementById('test-passage-text');
     const choiceLabels = document.querySelectorAll('.choice-label');
-    
+
     // Remove existing listeners
     if (contentArea) {
         contentArea.removeEventListener('mouseup', handleTextSelection);
@@ -2836,7 +2867,7 @@ function setupHighlightListeners() {
         label.removeEventListener('mouseup', handleTextSelection);
     });
     document.removeEventListener('mousedown', handleClickOutside);
-    
+
     // Add new listeners
     if (contentArea) {
         contentArea.addEventListener('mouseup', handleTextSelection);
@@ -2914,7 +2945,7 @@ function handleTextSelection(e) {
 // Show highlight button UI
 function showHighlightButtonUI() {
     removeHighlightButton();
-    
+
     const button = document.createElement('button');
     button.id = 'highlight-action-btn';
     // Transparent overlay wrapper positioned next to the selection.
@@ -2992,19 +3023,19 @@ function handleClickOutside(e) {
     const passageText = document.getElementById('test-passage-text');
     const highlightBtn = document.getElementById('highlight-action-btn');
     const toggleBtn = e.target.closest('.highlight-toggle-btn');
-    
+
     if (contentArea && contentArea.contains(e.target)) {
         return; // Click is inside content area
     }
-    
+
     if (passageText && passageText.contains(e.target)) {
         return; // Click is inside passage area
     }
-    
+
     if (highlightBtn && highlightBtn.contains(e.target)) {
         return; // Click is on highlight button
     }
-    
+
     // Click is outside, hide button and clear selection
     showHighlightButton = false;
     removeHighlightButton();
@@ -3018,12 +3049,12 @@ function createHighlight() {
         removeHighlightButton();
         return;
     }
-    
+
     const range = selection.getRangeAt(0);
     const contentArea = document.getElementById('test-content-area');
     const passageText = document.getElementById('test-passage-text');
     const choiceLabels = document.querySelectorAll('.choice-label');
-    
+
     const isInContent = contentArea && contentArea.contains(range.commonAncestorContainer);
     const isInPassage = passageText && passageText.contains(range.commonAncestorContainer);
     let isInChoice = false;
@@ -3032,12 +3063,12 @@ function createHighlight() {
             isInChoice = true;
         }
     });
-    
+
     if (!isInContent && !isInPassage && !isInChoice) {
         removeHighlightButton();
         return;
     }
-    
+
     // Create highlight element - directly in yellow
     const highlightId = `highlight-${highlightCounter++}`;
     const mark = document.createElement('mark');
@@ -3049,61 +3080,65 @@ function createHighlight() {
         padding: 0 2px;
         display: inline;
     `;
-    
+
     try {
         // Extract and wrap selected content
         const contents = range.extractContents();
         mark.appendChild(contents);
         range.insertNode(mark);
-        
+
         // Normalize to merge adjacent text nodes
         if (mark.parentNode) {
             mark.parentNode.normalize();
         }
-        
+
         // Add double-click to remove highlight
         mark.addEventListener('dblclick', (e) => {
             e.preventDefault();
             e.stopPropagation();
             removeHighlight(mark, highlightId);
         });
-        
+
         // Add right-click to cross out (strikethrough) functionality
         mark.setAttribute('data-strikethrough-enabled', 'true');
         mark.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            
+
             // Toggle strikethrough
             if (mark.style.textDecoration.includes('line-through')) {
                 mark.style.textDecoration = 'none';
             } else {
                 mark.style.textDecoration = 'line-through';
             }
-            
+
             // Save updated highlight
             saveHighlight(highlightId, mark);
-            
+
             // If highlight is in passage, save passage HTML
             const passageText = document.getElementById('test-passage-text');
             if (passageText && passageText.contains(mark)) {
-                const passageIndex = Math.floor(currentQuestionIndex / 16);
-                const passageKey = `${currentSubject}-${currentTestIndex}-passage-${passageIndex}`;
-                passageHighlights[passageKey] = passageText.innerHTML;
+                const passageKey = getCurrentPassageKey();
+                const captured = capturePassageState(passageText);
+                if (captured) {
+                    passageHighlights[passageKey] = captured;
+                }
             }
         });
-        
+
         // Save highlight (no toggle button needed)
         saveHighlight(highlightId, mark);
-        
+
         // If highlight is in passage, save passage HTML
         const passageText = document.getElementById('test-passage-text');
         if (passageText && passageText.contains(mark)) {
-            const passageIndex = Math.floor(currentQuestionIndex / 16);
-            const passageKey = `${currentSubject}-${currentTestIndex}-passage-${passageIndex}`;
-            passageHighlights[passageKey] = passageText.innerHTML;
+            const passageKey = getCurrentPassageKey();
+            const captured = capturePassageState(passageText);
+            if (captured) {
+                passageHighlights[passageKey] = captured;
+            }
         }
-        
+
         // Clear selection and hide button
         selection.removeAllRanges();
         removeHighlightButton();
@@ -3115,25 +3150,25 @@ function createHighlight() {
 // Remove highlight properly
 function removeHighlight(markElement, highlightId) {
     if (!markElement || !markElement.parentNode) return;
-    
+
     try {
         // Get the parent node
         const parent = markElement.parentNode;
-        
+
         // Create a document fragment to hold the text nodes
         const fragment = document.createDocumentFragment();
-        
+
         // Move all child nodes (text nodes) from the mark to the fragment
         while (markElement.firstChild) {
             fragment.appendChild(markElement.firstChild);
         }
-        
+
         // Replace the mark element with its text content
         parent.replaceChild(fragment, markElement);
-        
+
         // Normalize the parent to merge adjacent text nodes
         parent.normalize();
-        
+
         // Remove from highlights storage
         const key = getHighlightKey();
         if (highlights[key]) {
@@ -3142,17 +3177,30 @@ function removeHighlight(markElement, highlightId) {
                 delete highlights[key];
             }
         }
-        
+
         // If highlight is in passage, save passage HTML
         const passageText = document.getElementById('test-passage-text');
         if (passageText && passageText.contains(parent)) {
-            const passageIndex = Math.floor(currentQuestionIndex / 16);
-            const passageKey = `${currentSubject}-${currentTestIndex}-passage-${passageIndex}`;
-            passageHighlights[passageKey] = passageText.innerHTML;
+            const passageKey = getCurrentPassageKey();
+            const captured = capturePassageState(passageText);
+            if (captured) {
+                passageHighlights[passageKey] = captured;
+            }
         }
     } catch (err) {
         console.error('Error removing highlight:', err);
     }
+}
+
+// Capture passage state for saving
+function capturePassageState(passageElement) {
+    if (!passageElement) return null;
+
+    // Capture all paragraph HTML to preserve highlights
+    const paragraphs = passageElement.querySelectorAll('p');
+    if (paragraphs.length === 0) return null;
+
+    return Array.from(paragraphs).map(p => p.innerHTML);
 }
 
 // Toggle button functionality removed - highlights are now directly yellow
@@ -3163,10 +3211,10 @@ function saveHighlight(highlightId, markElement) {
     if (!highlights[key]) {
         highlights[key] = [];
     }
-    
+
     // Get text content and position info
     const text = markElement.textContent;
-    
+
     highlights[key].push({
         id: highlightId,
         text: text,
@@ -3181,7 +3229,7 @@ function clearHighlightsAndStrikethroughs() {
     highlights = {};
     passageHighlights = {};
     highlightCounter = 0;
-    
+
     // Clear localStorage strikethroughs for current test
     if (currentSubject && currentTestIndex !== null) {
         const test = allTestData[currentSubject] && allTestData[currentSubject][currentTestIndex];
@@ -3194,7 +3242,7 @@ function clearHighlightsAndStrikethroughs() {
             });
         }
     }
-    
+
     // Clear localStorage highlights for current test (only if not completed)
     if (currentSubject && currentTestIndex !== null) {
         const test = allTestData[currentSubject] && allTestData[currentSubject][currentTestIndex];
@@ -3202,8 +3250,10 @@ function clearHighlightsAndStrikethroughs() {
             test.forEach((q, i) => {
                 const key = `${currentSubject}-${currentTestIndex}-${i}`;
                 localStorage.removeItem(`highlights-${key}`);
-                const passageIndex = Math.floor(i / 16);
-                localStorage.removeItem(`passageHighlights-${currentSubject}-${currentTestIndex}-passage-${passageIndex}`);
+                const passageKey = getCurrentPassageKey(i);
+                if (passageKey) {
+                    localStorage.removeItem(`passageHighlights-${passageKey}`);
+                }
             });
         }
     }
@@ -3212,16 +3262,20 @@ function clearHighlightsAndStrikethroughs() {
 // Save highlights to localStorage (only when test is completed)
 function saveHighlightsToLocalStorage() {
     if (!currentSubject || currentTestIndex === null) return;
-    
+
     try {
         // Save highlights
         Object.keys(highlights).forEach(key => {
             localStorage.setItem(`highlights-${key}`, JSON.stringify(highlights[key]));
         });
-        
+
         // Save passage highlights
         Object.keys(passageHighlights).forEach(key => {
-            localStorage.setItem(`passageHighlights-${key}`, passageHighlights[key]);
+            try {
+                localStorage.setItem(`passageHighlights-${key}`, JSON.stringify(passageHighlights[key]));
+            } catch (jsonError) {
+                console.warn('Failed to serialize passage highlights for key', key, jsonError);
+            }
         });
     } catch (e) {
         console.error('Failed to save highlights to localStorage:', e);
@@ -3231,11 +3285,11 @@ function saveHighlightsToLocalStorage() {
 // Load highlights from localStorage (only for completed tests)
 function loadHighlightsFromLocalStorage() {
     if (!currentSubject || currentTestIndex === null) return;
-    
+
     try {
         const test = allTestData[currentSubject] && allTestData[currentSubject][currentTestIndex];
         if (!test) return;
-        
+
         // Load highlights
         test.forEach((q, i) => {
             const key = `${currentSubject}-${currentTestIndex}-${i}`;
@@ -3244,14 +3298,22 @@ function loadHighlightsFromLocalStorage() {
                 highlights[key] = JSON.parse(saved);
             }
         });
-        
+
         // Load passage highlights
         test.forEach((q, i) => {
-            const passageIndex = Math.floor(i / 16);
-            const passageKey = `${currentSubject}-${currentTestIndex}-passage-${passageIndex}`;
+            const passageKey = getCurrentPassageKey(i);
             const saved = localStorage.getItem(`passageHighlights-${passageKey}`);
             if (saved) {
-                passageHighlights[passageKey] = saved;
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) {
+                        passageHighlights[passageKey] = parsed;
+                    } else if (typeof parsed === 'string') {
+                        passageHighlights[passageKey] = [parsed];
+                    }
+                } catch (parseError) {
+                    passageHighlights[passageKey] = [saved];
+                }
             }
         });
     } catch (e) {
@@ -3263,45 +3325,47 @@ function loadHighlightsFromLocalStorage() {
 // But we need to re-attach right-click strikethrough functionality
 function reattachHighlightButtons(container) {
     if (!container) return;
-    
+
     // Find all highlight marks in the container
     const marks = container.querySelectorAll('mark.text-highlight');
     marks.forEach(mark => {
         const highlightId = mark.id;
         if (!highlightId) return;
-        
+
         // Only add listener if not already added (check data attribute)
         if (mark.getAttribute('data-strikethrough-enabled') !== 'true') {
             mark.setAttribute('data-strikethrough-enabled', 'true');
-            
+
             // Add double-click to remove highlight
             mark.addEventListener('dblclick', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 removeHighlight(mark, highlightId);
             });
-            
+
             // Add right-click to cross out (strikethrough) functionality
             mark.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 // Toggle strikethrough
                 if (mark.style.textDecoration.includes('line-through')) {
                     mark.style.textDecoration = 'none';
                 } else {
                     mark.style.textDecoration = 'line-through';
                 }
-                
+
                 // Save updated highlight
                 saveHighlight(highlightId, mark);
-                
+
                 // If highlight is in passage, save passage HTML
                 const passageText = document.getElementById('test-passage-text');
                 if (passageText && passageText.contains(mark)) {
-                    const passageIndex = Math.floor(currentQuestionIndex / 16);
-                    const passageKey = `${currentSubject}-${currentTestIndex}-passage-${passageIndex}`;
-                    passageHighlights[passageKey] = passageText.innerHTML;
+                    const passageKey = getCurrentPassageKey();
+                    const captured = capturePassageState(passageText);
+                    if (captured) {
+                        passageHighlights[passageKey] = captured;
+                    }
                 }
             });
         }
@@ -3312,11 +3376,11 @@ function reattachHighlightButtons(container) {
 function restoreHighlights() {
     const key = getHighlightKey();
     const questionHighlights = highlights[key] || [];
-    
+
     if (questionHighlights.length === 0) {
         return;
     }
-    
+
     // This is a simplified version - in a real implementation, you'd need to
     // match highlights to their original positions in the text
     // For now, we'll store the HTML and restore it
@@ -3325,12 +3389,12 @@ function restoreHighlights() {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initializeApp();
 });
 
 // Also call applyExamButtonTheme on window load to ensure all buttons are properly themed
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     if (typeof applyExamButtonTheme === 'function') {
         console.log('Window loaded - applying exam button theme');
         applyExamButtonTheme();
@@ -3342,13 +3406,13 @@ function initializeApp() {
     setupEventListeners();
     // Load saved state
     loadSavedState();
-    
+
     // Ensure dashboard view is shown by default
     const dashboardView = document.getElementById('dashboard-view');
     if (dashboardView) {
         dashboardView.style.display = 'block';
     }
-    
+
     // Hide Organic Chemistry floating buttons initially (will be shown if needed by applyExamButtonTheme)
     const organicChemAuthorBtn = document.getElementById('organic-chem-author-btn');
     const ochemResetBtn = document.getElementById('ochem-reset-btn');
@@ -3367,7 +3431,7 @@ function setupEventListeners() {
         if (link.id === 'nav-home' || link.id === 'nav-subjects') {
             return;
         }
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
             const subject = this.textContent.trim();
             showSubject(subject, e);
@@ -3388,7 +3452,7 @@ function setupEventListeners() {
     if (testPrevBtn) testPrevBtn.addEventListener('click', prevQuestion);
     if (testNextBtn) {
         // Use event listener but check if it's the last question
-        testNextBtn.addEventListener('click', function(e) {
+        testNextBtn.addEventListener('click', function (e) {
             const test = allTestData[currentSubject] && allTestData[currentSubject][currentTestIndex];
             if (test && currentQuestionIndex === test.length - 1) {
                 // Last question - show End Test modal
@@ -3410,25 +3474,25 @@ function setupEventListeners() {
     // Toggle switches
     const togglePrometric = document.getElementById('toggle-prometric-delay');
     const toggleTimeAccom = document.getElementById('toggle-time-accommodations');
-    
+
     if (togglePrometric) {
-        togglePrometric.addEventListener('change', function() {
+        togglePrometric.addEventListener('change', function () {
             prometricDelay = this.checked;
             saveSettings();
         });
     }
-    
+
     if (toggleTimeAccom) {
-        toggleTimeAccom.addEventListener('change', function() {
+        toggleTimeAccom.addEventListener('change', function () {
             timeAccommodations = this.checked;
             saveSettings();
         });
     }
-    
+
     // Exit button handlers - use event delegation as a fallback
     // The HTML onclick handlers should handle most cases, but this ensures
     // buttons without onclick handlers (e.g., dynamically created) still work
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const exitBtn = e.target.closest('.exam-close-btn');
         if (exitBtn) {
             const hasOnclick = exitBtn.getAttribute('onclick');
@@ -3448,18 +3512,18 @@ function setupEventListeners() {
 function showView(viewId, event, navElement) {
     console.log('showView called with viewId:', viewId);
     if (event) event.preventDefault();
-    
+
     // Hide all views
     document.querySelectorAll('.app-view').forEach(view => {
         view.style.display = 'none';
     });
-    
+
     const mainContent = document.getElementById('main-content');
     // Show/hide sidebar based on view
     const sidebar = document.getElementById('sidebar');
     const examViews = ['test-view', 'pre-test-instructions-view', 'review-view', 'results-view', 'detailed-review-view', 'tagged-questions-view'];
     const reviewViews = ['review-view', 'detailed-review-view', 'results-view', 'tagged-questions-view'];
-    
+
     if (examViews.includes(viewId)) {
         // Hide sidebar for exam views only
         if (sidebar) sidebar.style.display = 'none';
@@ -3529,7 +3593,7 @@ function showView(viewId, event, navElement) {
             mainContent.style.width = '100%';
         }
     }
-    
+
     // Show requested view
     const view = document.getElementById(viewId);
     if (view) {
@@ -3556,7 +3620,7 @@ function showView(viewId, event, navElement) {
             view.style.display = 'flex';
         }
     }
-    
+
     // Apply button themes for test and review views
     if (viewId === 'test-view' || viewId === 'review-view') {
         setTimeout(() => {
@@ -3565,7 +3629,7 @@ function showView(viewId, event, navElement) {
             }
         }, 100);
     }
-    
+
     // Force hide/show logic for dashboard
     if (viewId === 'dashboard-view') {
         // Ensure dashboard is visible
@@ -3575,54 +3639,54 @@ function showView(viewId, event, navElement) {
         // Add class to body for dashboard styling
         document.body.classList.add('dashboard-active');
         document.body.style.backgroundColor = '#282a5c';
-           } else if (viewId === 'subject-pages-view') {
-               // Remove dashboard class when showing subject pages
-               document.body.classList.remove('dashboard-active');
-               // Check dark mode preference and set background accordingly
-               try {
-                   const isDarkMode = localStorage.getItem('subject-pages-dark-mode') === 'true';
-                   if (isDarkMode) {
-                       document.body.classList.add('dark-mode');
-                       document.body.style.backgroundColor = '#111827';
-                       document.body.style.setProperty('background-color', '#111827', 'important');
-                       const mainContent = document.getElementById('main-content');
-                       if (mainContent) {
-                           mainContent.style.backgroundColor = '#111827';
-                           mainContent.style.setProperty('background-color', '#111827', 'important');
-                       }
-                       const subjectPagesView = document.getElementById('subject-pages-view');
-                       if (subjectPagesView) {
-                           subjectPagesView.style.backgroundColor = '#111827';
-                           subjectPagesView.style.setProperty('background-color', '#111827', 'important');
-                       }
-                   } else {
-                       document.body.classList.remove('dark-mode');
-                       document.body.style.backgroundColor = '#f9fafb';
-                       document.body.style.setProperty('background-color', '#f9fafb', 'important');
-                       const mainContent = document.getElementById('main-content');
-                       if (mainContent) {
-                           mainContent.style.backgroundColor = '#f9fafb';
-                           mainContent.style.setProperty('background-color', '#f9fafb', 'important');
-                       }
-                       const subjectPagesView = document.getElementById('subject-pages-view');
-                       if (subjectPagesView) {
-                           subjectPagesView.style.backgroundColor = '#f9fafb';
-                           subjectPagesView.style.setProperty('background-color', '#f9fafb', 'important');
-                       }
-                   }
-               } catch (e) {
-                   // Fallback to light mode if localStorage access fails
-                   document.body.classList.remove('dark-mode');
-                   document.body.style.backgroundColor = '#f9fafb';
-               }
-           } else {
-               // Remove dashboard class when not on dashboard
-               document.body.classList.remove('dashboard-active');
-               document.body.classList.remove('dark-mode');
-               // Reset body background for other views
-               document.body.style.backgroundColor = '#13547a';
-           }
-    
+    } else if (viewId === 'subject-pages-view') {
+        // Remove dashboard class when showing subject pages
+        document.body.classList.remove('dashboard-active');
+        // Check dark mode preference and set background accordingly
+        try {
+            const isDarkMode = localStorage.getItem('subject-pages-dark-mode') === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                document.body.style.backgroundColor = '#111827';
+                document.body.style.setProperty('background-color', '#111827', 'important');
+                const mainContent = document.getElementById('main-content');
+                if (mainContent) {
+                    mainContent.style.backgroundColor = '#111827';
+                    mainContent.style.setProperty('background-color', '#111827', 'important');
+                }
+                const subjectPagesView = document.getElementById('subject-pages-view');
+                if (subjectPagesView) {
+                    subjectPagesView.style.backgroundColor = '#111827';
+                    subjectPagesView.style.setProperty('background-color', '#111827', 'important');
+                }
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.body.style.backgroundColor = '#f9fafb';
+                document.body.style.setProperty('background-color', '#f9fafb', 'important');
+                const mainContent = document.getElementById('main-content');
+                if (mainContent) {
+                    mainContent.style.backgroundColor = '#f9fafb';
+                    mainContent.style.setProperty('background-color', '#f9fafb', 'important');
+                }
+                const subjectPagesView = document.getElementById('subject-pages-view');
+                if (subjectPagesView) {
+                    subjectPagesView.style.backgroundColor = '#f9fafb';
+                    subjectPagesView.style.setProperty('background-color', '#f9fafb', 'important');
+                }
+            }
+        } catch (e) {
+            // Fallback to light mode if localStorage access fails
+            document.body.classList.remove('dark-mode');
+            document.body.style.backgroundColor = '#f9fafb';
+        }
+    } else {
+        // Remove dashboard class when not on dashboard
+        document.body.classList.remove('dashboard-active');
+        document.body.classList.remove('dark-mode');
+        // Reset body background for other views
+        document.body.style.backgroundColor = '#13547a';
+    }
+
     // Update active nav
     if (navElement) {
         document.querySelectorAll('.sidebar-nav-item').forEach(link => {
@@ -3630,7 +3694,7 @@ function showView(viewId, event, navElement) {
         });
         navElement.classList.add('active');
     }
-    
+
     // If showing dashboard, remove active from all subject links and set home as active
     if (viewId === 'dashboard-view') {
         document.querySelectorAll('.sidebar-nav-item').forEach(link => {
@@ -3638,7 +3702,7 @@ function showView(viewId, event, navElement) {
         });
         const homeNav = document.getElementById('nav-home');
         if (homeNav) homeNav.classList.add('active');
-        
+
         // Ensure sidebar is always black on dashboard
         const sidebar = document.getElementById('sidebar');
         if (sidebar) {
@@ -3676,21 +3740,21 @@ function updateHeaderColor(subjectName) {
 
     // Set subject color for cards, buttons, etc.
     document.documentElement.style.setProperty('--subject-bg-color', color);
-    
+
     // KEEP SIDEBAR ALWAYS BLACK - DO NOT CHANGE SIDEBAR BACKGROUND
     // Remove any existing subject color style that might change sidebar
     const existingStyle = document.getElementById('sidebar-subject-color-style');
     if (existingStyle) {
         existingStyle.remove();
     }
-    
+
     // Ensure sidebar stays black
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
         sidebar.style.backgroundColor = '#000000';
         sidebar.style.setProperty('background-color', '#000000', 'important');
     }
-    
+
     // Always use blue for exam headers/footers
     document.documentElement.style.setProperty('--header-color', defaultHeaderColor);
 
@@ -3712,7 +3776,7 @@ function toggleSidebar() {
     const subjectsList = document.getElementById('subjects-list');
     const subjectsToggle = document.getElementById('nav-subjects');
     const subjectsChevron = document.getElementById('subjects-chevron');
-    
+
     if (sidebar) {
         sidebar.classList.toggle('sidebar-collapsed');
         const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
@@ -3750,11 +3814,11 @@ function toggleSidebar() {
 // Toggle subjects menu
 function toggleSubjectsMenu(event) {
     if (event) event.preventDefault();
-    
+
     const subjectsList = document.getElementById('subjects-list');
     const chevron = document.getElementById('subjects-chevron');
     const toggleLink = document.getElementById('nav-subjects');
-    
+
     if (subjectsList && chevron && toggleLink) {
         subjectsList.classList.toggle('hidden');
         const isHidden = subjectsList.classList.contains('hidden');
@@ -3767,21 +3831,21 @@ function toggleSubjectsMenu(event) {
 function showSubject(subjectName, event) {
     console.log('showSubject called with:', subjectName, event);
     if (event) event.preventDefault();
-    
+
     currentSubject = subjectName;
-    
+
     // Update header color for this subject
     updateHeaderColor(subjectName);
-    
+
     // Update sidebar navigation - remove active from all, add to current
     document.querySelectorAll('.sidebar-nav-item').forEach(link => {
         link.classList.remove('active');
     });
-    
+
     // Remove active from home
     const homeNav = document.getElementById('nav-home');
     if (homeNav) homeNav.classList.remove('active');
-    
+
     // Map subject names to their nav IDs
     const subjectNavMap = {
         'Biology': 'nav-biology',
@@ -3791,7 +3855,7 @@ function showSubject(subjectName, event) {
         'Physics': 'nav-physics',
         'Quantitative Reasoning': 'nav-quantitative-reasoning'
     };
-    
+
     const activeNavId = subjectNavMap[subjectName];
     if (activeNavId) {
         const activeNav = document.getElementById(activeNavId);
@@ -3799,7 +3863,7 @@ function showSubject(subjectName, event) {
             activeNav.classList.add('active');
         }
     }
-    
+
     // Update pre-test view header and title
     const preTestHeaderTitle = document.getElementById('pre-test-header-title');
     const preTestSubjectTitle = document.getElementById('pre-test-subject-title');
@@ -3809,14 +3873,14 @@ function showSubject(subjectName, event) {
     if (preTestSubjectTitle) {
         preTestSubjectTitle.textContent = subjectName;
     }
-    
+
     // Show new React-based subject pages instead of old pre-test view
     console.log('🔄 Showing subject-pages-view for:', subjectName);
     showView('subject-pages-view', event);
-    
+
     // Wait a bit for the view to be shown, then initialize React component
     // Use a longer delay to ensure DOM is stable and avoid React cleanup conflicts
-    setTimeout(function() {
+    setTimeout(function () {
         // Double-check we're still on the subject pages view before initializing
         const subjectPagesView = document.getElementById('subject-pages-view');
         if (subjectPagesView && subjectPagesView.style.display !== 'none') {
@@ -3851,7 +3915,7 @@ function displayTestList(subjectName) {
     const noTestsView = document.getElementById('no-tests-view');
     const testListView = document.getElementById('test-list-view');
     const metaSummary = document.getElementById('subject-tests-meta-summary');
-    
+
     if (tests.length === 0) {
         console.log('No tests found, showing no-tests-view');
         noTestsView.style.display = 'block';
@@ -3859,18 +3923,18 @@ function displayTestList(subjectName) {
         if (metaSummary) metaSummary.textContent = 'No practice tests available yet';
         return;
     }
-    
+
     console.log('Showing test list with', tests.length, 'tests');
     noTestsView.style.display = 'none';
     testListView.style.display = 'block';
-    
+
     container.innerHTML = '';
     if (metaSummary) metaSummary.textContent = `${tests.length} practice ${tests.length === 1 ? 'test' : 'tests'} available`;
-    
+
     tests.forEach((test, index) => {
         const testCard = document.createElement('div');
         testCard.className = 'subject-test-card';
-        
+
         const isTrialMode = subjectName === 'Reading Comprehension' && index === 0 && test[0] && test[0].passageId;
         const testTitle = isTrialMode ? `${subjectName} Trial Mode` : `${subjectName} Test #${index + 1}`;
 
@@ -3889,7 +3953,7 @@ function displayTestList(subjectName) {
         const score = latestAttempt ? getScaledScore(latestAttempt.score) : '--';
         const attemptsCount = attempts.length;
         const dateLabel = latestAttempt ? formatResultDate(latestAttempt.date) : '--';
-        
+
         testCard.innerHTML = `
             <div class="subject-test-index">${index + 1}</div>
             <div class="subject-test-info">
@@ -3929,10 +3993,10 @@ function displayTestList(subjectName) {
 
 function startPreTest(subjectName, testIndex) {
     console.log('✅ startPreTest called:', subjectName, 'Test Index:', testIndex);
-    
+
     currentSubject = subjectName;
     currentTestIndex = testIndex;
-    
+
     // Check if this test was just reset
     const resetFlagKey = getNamespacedStorageKey(`exam-reset-flag-${subjectName}-${testIndex}`);
     const wasJustReset = localStorage.getItem(resetFlagKey);
@@ -3967,42 +4031,42 @@ function startPreTest(subjectName, testIndex) {
             console.warn('Error clearing reset flag:', e);
         }
     }
-    
+
     // Update header color for this subject
     if (typeof updateHeaderColor === 'function') {
         updateHeaderColor(subjectName);
     }
-    
+
     // Clear highlights and strikethroughs when starting a new test
     if (typeof clearHighlightsAndStrikethroughs === 'function') {
         clearHighlightsAndStrikethroughs();
     }
-    
+
     // Get fresh test data
     const subjectTests = getAllTestData()[subjectName];
     const test = subjectTests && subjectTests[testIndex];
-    
+
     if (!test) {
         console.error('❌ Test not found:', subjectName, testIndex);
         console.error('Available tests for', subjectName + ':', subjectTests ? subjectTests.length : 0);
         alert('Test not found. Please try again.');
         return;
     }
-    
+
     console.log('✅ Test found:', test.length, 'questions');
-    
+
     // Update pre-test instructions view
     const preTestInstructionsTitle = document.getElementById('pre-test-instructions-title');
     const preTestInstructionsInstruction1 = document.getElementById('pre-test-instructions-instruction-1');
     const preTestInstructionsHeaderTitle = document.getElementById('pre-test-instructions-header-title');
-    
+
     if (preTestInstructionsTitle) {
         preTestInstructionsTitle.textContent = `This is ${subjectName} Test #${testIndex + 1}. Please read the following before starting:`;
     }
-    
+
     // Check if this is the trial mode test
     const isTrialMode = subjectName === 'Reading Comprehension' && testIndex === 0 && test[0] && test[0].passageId;
-    
+
     let timeMinutes = 30; // Default
     if (subjectName === 'Reading Comprehension') {
         timeMinutes = isTrialMode ? 10 : 60; // 10 minutes for trial, 60 for regular
@@ -4011,11 +4075,11 @@ function startPreTest(subjectName, testIndex) {
     } else if (subjectName === 'Physics') {
         timeMinutes = 50;
     }
-    
+
     if (preTestInstructionsInstruction1) {
         preTestInstructionsInstruction1.textContent = `You have ${timeMinutes} minutes to finish ${test.length} questions.`;
     }
-    
+
     if (preTestInstructionsHeaderTitle) {
         // Update title for trial mode
         if (isTrialMode) {
@@ -4024,7 +4088,7 @@ function startPreTest(subjectName, testIndex) {
             preTestInstructionsHeaderTitle.textContent = `${subjectName} Test #${testIndex + 1}`;
         }
     }
-    
+
     // Update instructions title for trial mode
     if (preTestInstructionsTitle) {
         if (isTrialMode) {
@@ -4033,31 +4097,31 @@ function startPreTest(subjectName, testIndex) {
             preTestInstructionsTitle.textContent = `This is ${subjectName} Test #${testIndex + 1}. Read this before starting:`;
         }
     }
-    
+
     // Load settings
     if (typeof loadSettings === 'function') {
         loadSettings();
     }
-    
+
     // Initialize button management UI (will only initialize if container exists)
     if (typeof initializeButtonManagement === 'function') {
         setTimeout(() => {
             initializeButtonManagement();
         }, 100);
     }
-    
+
     console.log('✅ Showing pre-test-instructions-view');
-    
+
     // Set view mode to 'intro' if not already set (preserve loaded view mode if resuming)
     if (currentViewMode === null || currentViewMode === undefined) {
         currentViewMode = 'intro';
     }
-    
+
     // Auto-save state (even if just previewing)
     saveFullExamState();
-    
+
     showView('pre-test-instructions-view');
-    
+
     // Apply button themes after view is shown
     setTimeout(() => {
         if (typeof applyExamButtonTheme === 'function') {
@@ -4073,25 +4137,25 @@ function startTest() {
     // Get fresh test data
     const subjectTests = getAllTestData()[currentSubject];
     const test = subjectTests && subjectTests[currentTestIndex];
-    
+
     if (!test) {
         console.error('❌ Test not found in startTest:', currentSubject, currentTestIndex);
         console.error('Available tests for', currentSubject + ':', subjectTests ? subjectTests.length : 0);
         alert('Test not found. Please try again.');
         return;
     }
-    
+
     examSubmitted = false;
     if (currentSubject && currentTestIndex !== null && currentTestIndex !== undefined) {
         clearFullExamState(currentSubject, currentTestIndex);
     }
-    
+
     console.log('✅ Starting test:', currentSubject, 'Test #' + (currentTestIndex + 1), 'with', test.length, 'questions');
-    
+
     // Ensure answers are cleared when starting a fresh test attempt
     // Check if this is a fresh start (no testStartTime) or resuming
     const isFreshStart = !testStartTime || timeRemaining === null || timeRemaining === undefined;
-    
+
     if (isFreshStart) {
         // Fresh start - clear all answers and state to ensure clean slate
         console.log('🔄 Fresh start - clearing previous answers and state');
@@ -4104,7 +4168,7 @@ function startTest() {
         passageHighlights = {};
         highlightCounter = 0;
     }
-    
+
     // State should already be loaded in startPreTest, but double-check
     // If timeRemaining is null, this is a fresh start
     if (timeRemaining === null || timeRemaining === undefined) {
@@ -4127,19 +4191,19 @@ function startTest() {
         // Just log the current state
         console.log('⏱️ Resuming test with remaining time:', timeRemaining, 'seconds');
     }
-    
+
     // Set view mode to 'test' and auto-save
     currentViewMode = 'test';
     saveFullExamState();
-    
+
     // Enable beforeunload warning when test is active
     enableTestExitWarning();
-    
+
     // Clear highlights and strikethroughs when starting test (in case user went back)
     if (typeof clearHighlightsAndStrikethroughs === 'function') {
         clearHighlightsAndStrikethroughs();
     }
-    
+
     // Update test header title and subtitle
     const testHeaderSubtitle = document.getElementById('test-header-subtitle');
     if (testHeaderSubtitle) {
@@ -4149,7 +4213,7 @@ function startTest() {
             testHeaderSubtitle.textContent = `${currentSubject} Test #${currentTestIndex + 1}`;
         }
     }
-    
+
     // Adjust width for Reading Comprehension (less wide layout)
     const testContentWrapper = document.getElementById('test-content-wrapper');
     if (testContentWrapper) {
@@ -4159,7 +4223,7 @@ function startTest() {
             testContentWrapper.className = 'w-[62%] min-w-[740px] bg-white border border-black/80 p-8 relative';
         }
     }
-    
+
     // Reset time tracking (unless resuming)
     // Check if we're resuming by checking if testStartTime was already set from loaded state
     if (!testStartTime) {
@@ -4173,7 +4237,7 @@ function startTest() {
             questionTimeSpent = {};
         }
     }
-    
+
     // Calculate time - Reading Comprehension is 60 minutes, Quantitative Reasoning is 45 minutes, Physics is 50 minutes, others are 30 minutes
     // Trial mode test (index 0 with passageId questions) uses 10 minutes
     let baseTime = 1800; // Default 30 minutes
@@ -4187,20 +4251,20 @@ function startTest() {
         baseTime = 3000; // 50 minutes
     }
     timeRemaining = timeAccommodations ? Math.floor(baseTime * 1.5) : baseTime;
-    
+
     // Start timer
     if (typeof startTimer === 'function') {
         startTimer();
     }
-    
+
     // Show first question
     if (typeof displayQuestion === 'function') {
         displayQuestion(0);
     }
-    
+
     // Show test view
     showView('test-view');
-    
+
     // Enter fullscreen mode
     if (typeof enterFullscreen === 'function') {
         enterFullscreen();
@@ -4210,7 +4274,7 @@ function startTest() {
 // Fullscreen functions
 function enterFullscreen() {
     const element = document.documentElement;
-    
+
     if (element.requestFullscreen) {
         element.requestFullscreen().catch(err => {
             console.log('Error attempting to enable fullscreen:', err);
@@ -4247,47 +4311,47 @@ function exitFullscreen() {
 function displayQuestion(index) {
     const test = allTestData[currentSubject][currentTestIndex];
     const question = test[index];
-    
+
     if (!question) return;
-    
+
     // Load highlights from localStorage if this is a completed test
     // Only load once when displaying first question
     if (index === 0 && Object.keys(highlights).length === 0) {
         loadHighlightsFromLocalStorage();
     }
-    
+
     // Track time spent on previous question
     if (questionStartTime[currentQuestionIndex] !== undefined) {
         const timeSpent = Date.now() - questionStartTime[currentQuestionIndex];
         questionTimeSpent[currentQuestionIndex] = (questionTimeSpent[currentQuestionIndex] || 0) + timeSpent;
     }
-    
+
     // Start timer for current question
     questionStartTime[index] = Date.now();
-    
+
     currentQuestionIndex = index;
     // Save state after navigating to new question
     saveFullExamState();
-    
+
     // Update header
     document.getElementById('test-q-number').textContent = index + 1;
     document.getElementById('test-q-total').textContent = test.length;
-    
+
     // Update question stem - make it highlightable
     const stemElement = document.getElementById('test-q-stem');
     stemElement.innerHTML = escapeHtml(question.stem);
     stemElement.setAttribute('contenteditable', 'false');
     stemElement.style.userSelect = 'text';
-    
+
     // Update choices - make them highlightable
     const choicesContainer = document.getElementById('test-q-choices');
     choicesContainer.innerHTML = '';
-    
+
     question.c.forEach((choice, i) => {
         const choiceDiv = document.createElement('div');
         choiceDiv.className = 'flex items-start gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded';
         choiceDiv.style.userSelect = 'text';
-        
+
         // Create label with highlightable text
         const label = document.createElement('label');
         label.setAttribute('for', `choice-${i}`);
@@ -4295,34 +4359,34 @@ function displayQuestion(index) {
         label.style.userSelect = 'text';
         label.setAttribute('data-choice-index', i);
         label.setAttribute('data-question-index', index);
-        
+
         // Check if this choice has strikethrough saved
         const choiceKey = `${currentSubject}-${currentTestIndex}-q${index}-choice${i}`;
         const savedStrikethrough = localStorage.getItem(`strikethrough-${choiceKey}`);
         const choiceText = `${String.fromCharCode(65 + i)}. ${escapeHtml(choice)}`;
-        
+
         if (savedStrikethrough === 'true') {
             label.innerHTML = `<span style="text-decoration: line-through;">${choiceText}</span>`;
         } else {
             label.innerHTML = choiceText;
         }
-        
+
         // Add right-click to toggle strikethrough
         label.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            
+
             // Check if we're right-clicking on highlighted text
             const selection = window.getSelection();
             if (selection && !selection.isCollapsed) {
                 // User selected text, check if it's within a highlight
                 const range = selection.getRangeAt(0);
-                const mark = range.commonAncestorContainer.closest ? 
-                    range.commonAncestorContainer.closest('mark') : 
-                    (range.commonAncestorContainer.nodeType === 1 && range.commonAncestorContainer.tagName === 'MARK' ? 
-                        range.commonAncestorContainer : 
+                const mark = range.commonAncestorContainer.closest ?
+                    range.commonAncestorContainer.closest('mark') :
+                    (range.commonAncestorContainer.nodeType === 1 && range.commonAncestorContainer.tagName === 'MARK' ?
+                        range.commonAncestorContainer :
                         range.commonAncestorContainer.parentElement?.closest('mark'));
-                
+
                 if (mark) {
                     // Toggle strikethrough on the highlight
                     if (mark.style.textDecoration.includes('line-through')) {
@@ -4334,7 +4398,7 @@ function displayQuestion(index) {
                     return;
                 }
             }
-            
+
             // Otherwise, toggle strikethrough on the entire choice
             const span = label.querySelector('span[style*="line-through"]');
             if (span) {
@@ -4354,28 +4418,28 @@ function displayQuestion(index) {
                 localStorage.setItem(`strikethrough-${choiceKey}`, 'true');
             }
         });
-        
+
         // Make the label highlightable (add to highlightable areas)
         label.setAttribute('contenteditable', 'false');
-        
+
         choiceDiv.innerHTML = `
             <input type="radio" name="answer" value="${i}" id="choice-${i}" ${userAnswers[index] === i ? 'checked' : ''} onchange="selectAnswer(${index}, ${i})">
         `;
         choiceDiv.appendChild(label);
         choicesContainer.appendChild(choiceDiv);
     });
-    
+
     // Display passage for Reading Comprehension
     const passageContainer = document.getElementById('test-passage-container');
     const passageText = document.getElementById('test-passage-text');
     const passageTitle = document.getElementById('test-passage-title');
-    
+
     if (currentSubject === 'Reading Comprehension' && passageContainer && passageText && passageTitle) {
         const testPassages = typeof readingComprehensionPassages !== 'undefined' ? readingComprehensionPassages[currentSubject]?.[currentTestIndex] : null;
         let passage = null;
         let passageKey = null;
         let passageIndex = null;
-        
+
         // Check if question has passageId (new structure - like React code)
         if (question.passageId) {
             const derivedIndexFromId = getPassageIndexFromId(question.passageId);
@@ -4410,27 +4474,27 @@ function displayQuestion(index) {
         } else {
             // Fall back to old structure: determine which passage this question belongs to (16 questions per passage for 50-question tests)
             if (Array.isArray(testPassages)) {
-                passageIndex = Math.floor(index / 16); // 0, 1, or 2
+                passageIndex = Math.floor(index / 17); // 0, 1, or 2
                 if (testPassages[passageIndex]) {
                     passage = testPassages[passageIndex];
                     passageKey = `${currentSubject}-${currentTestIndex}-passage-${passageIndex}`;
                 }
             }
         }
-        
+
         if (passage) {
             const passageNumber = (passageIndex !== null ? passageIndex : 0) + 1;
             passageTitle.textContent = `Passage ${passageNumber}`;
-            
+
             // If passage has content array, use it; otherwise use text and split into paragraphs
             if (passage.content && Array.isArray(passage.content)) {
                 // Use content array format (trial mode structure)
-            if (!passageHighlights[passageKey]) {
+                if (!passageHighlights[passageKey]) {
                     // Initialize with content array
                     passageHighlights[passageKey] = passage.content.map(para => escapeHtml(para));
                 }
                 // Display as paragraphs with proper spacing (space-y-4 is on container, so no margin needed on paragraphs)
-                passageText.innerHTML = passageHighlights[passageKey].map((para, idx) => 
+                passageText.innerHTML = passageHighlights[passageKey].map((para, idx) =>
                     `<p>${para}</p>`
                 ).join('');
             } else if (passage.text) {
@@ -4440,11 +4504,11 @@ function displayQuestion(index) {
                     const lines = passage.text.split('\n');
                     const paragraphs = [];
                     let currentPara = '';
-                    
+
                     for (let i = 0; i < lines.length; i++) {
                         const line = lines[i].trim();
                         if (!line) continue;
-                        
+
                         // Check if line starts with a numbered paragraph marker like "(1)", "(2)", etc.
                         if (line.match(/^\(\d+\)/)) {
                             // Start a new paragraph
@@ -4461,30 +4525,30 @@ function displayQuestion(index) {
                             }
                         }
                     }
-                    
+
                     // Add the last paragraph
                     if (currentPara) {
                         paragraphs.push(currentPara.trim());
                     }
-                    
+
                     // If we didn't get proper paragraphs, fall back to splitting by double newlines
                     if (paragraphs.length <= 1) {
                         paragraphs = passage.text.split(/\n\n+/).filter(p => p.trim());
                     }
-                    
+
                     passageHighlights[passageKey] = paragraphs.map(para => escapeHtml(para));
                 }
                 // Display as paragraphs with proper spacing
-                passageText.innerHTML = passageHighlights[passageKey].map((para, idx) => 
+                passageText.innerHTML = passageHighlights[passageKey].map((para, idx) =>
                     `<p style="margin-bottom: 1rem;">${para}</p>`
                 ).join('');
             }
-            
+
             // Re-attach toggle button listeners for existing highlights
             reattachHighlightButtons(passageText);
-            
+
             passageContainer.style.display = 'block';
-            
+
             // Add passage to highlightable content area
             passageText.setAttribute('contenteditable', 'false');
             passageText.style.userSelect = 'text';
@@ -4494,19 +4558,19 @@ function displayQuestion(index) {
     } else if (passageContainer) {
         passageContainer.style.display = 'none';
     }
-    
+
     // Restore highlights for this question
     restoreHighlights();
-    
+
     // Re-attach toggle buttons for any existing highlights in content area
     const contentArea = document.getElementById('test-content-area');
     if (contentArea) {
         reattachHighlightButtons(contentArea);
     }
-    
+
     // Setup highlighting listeners (includes passage area)
     setupHighlightListeners();
-    
+
     applyExamButtonTheme();
 }
 
@@ -4549,14 +4613,14 @@ function updateTestMarkButton(index, config) {
     const key = isMarked ? 'mark-active' : 'mark';
     setExamButtonContent(markBtn, key, isMarked ? 'MARKED' : 'MARK', buttonConfig);
     markBtn.classList.toggle('is-marked', isMarked);
-    
+
     // Wire up click handler - instant response
-    markBtn.onclick = function(e) {
+    markBtn.onclick = function (e) {
         if (!markBtn.disabled) {
             toggleMark(index);
         }
     };
-    
+
     // Ensure image never blocks clicks - no delays
     const img = markBtn.querySelector('.button-skin');
     if (img) {
@@ -4573,14 +4637,14 @@ function updateDetailedReviewMarkButton(index, config) {
     const key = isMarked ? 'mark-active' : 'mark';
     setExamButtonContent(reviewMarkBtn, key, isMarked ? 'MARKED' : 'MARK', buttonConfig);
     reviewMarkBtn.classList.toggle('is-marked', isMarked);
-    
+
     // Wire up click handler - instant response
-    reviewMarkBtn.onclick = function(e) {
+    reviewMarkBtn.onclick = function (e) {
         if (!reviewMarkBtn.disabled) {
             toggleMark(index, { context: 'detailed-review' });
         }
     };
-    
+
     // Ensure image never blocks clicks - no delays
     const img = reviewMarkBtn.querySelector('.button-skin');
     if (img) {
@@ -4632,16 +4696,16 @@ function showReviewView() {
     // Set view mode to 'review' and save state
     currentViewMode = 'review';
     saveFullExamState();
-    
+
     // Apply current dark mode preference to the review views
     applyTestReviewDarkModeFromPreference();
-    
+
     // Update review header title
     const reviewHeaderTitle = document.getElementById('review-header-title');
     if (reviewHeaderTitle && currentSubject && currentTestIndex !== null) {
         reviewHeaderTitle.textContent = `${currentSubject} Test #${currentTestIndex + 1}`;
     }
-    
+
     if (prometricDelay) {
         setTimeout(() => {
             showView('review-view');
@@ -4722,17 +4786,17 @@ function toggleTestReviewDarkMode() {
 function updateReviewTimer() {
     const reviewTimer = document.getElementById('review-timer');
     if (!reviewTimer) return;
-    
+
     // Format time remaining as MM:SS
-        const minutes = Math.floor(timeRemaining / 60);
-        const seconds = timeRemaining % 60;
-        reviewTimer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    reviewTimer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 function jumpToQuestion(type, index) {
     const test = allTestData[currentSubject][currentTestIndex];
     let targetIndex = 0;
-    
+
     if (typeof type === 'number') {
         // Direct index
         targetIndex = type;
@@ -4756,7 +4820,7 @@ function jumpToQuestion(type, index) {
         // Start from beginning
         targetIndex = 0;
     }
-    
+
     currentQuestionIndex = targetIndex;
     showView('test-view');
     displayQuestion(targetIndex);
@@ -5013,7 +5077,7 @@ function openSubmitConfirmation() {
         console.log('✅ Submit confirmation modal shown');
         // Prevent ESC key from closing (block background interaction)
         document.body.style.overflow = 'hidden';
-        
+
         // Prevent ESC key from closing modal
         const escHandler = (e) => {
             if (e.key === 'Escape') {
@@ -5053,11 +5117,11 @@ function confirmSubmitTest() {
 function displayReviewGrid() {
     const test = allTestData[currentSubject][currentTestIndex];
     const container = document.getElementById('review-grid-container');
-    
+
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
+
     // Create table rows
     test.forEach((q, i) => {
         const row = document.createElement('div');
@@ -5067,7 +5131,7 @@ function displayReviewGrid() {
             showView('test-view');
             displayQuestion(i);
         };
-        
+
         // Name column with document icon and green checkmark
         const nameCell = document.createElement('div');
         nameCell.className = 'px-3 py-2 flex items-center space-x-2';
@@ -5086,7 +5150,7 @@ function displayReviewGrid() {
             </div>
             <span style="font-size: 14px; font-weight: normal; color: #374151; font-family: Arial, sans-serif;">Question ${i + 1}</span>
         `;
-        
+
         // Marked column
         const markedCell = document.createElement('div');
         markedCell.className = 'px-3 py-2';
@@ -5095,7 +5159,7 @@ function displayReviewGrid() {
         markedCell.style.color = '#374151';
         markedCell.style.fontFamily = 'Arial, sans-serif';
         markedCell.textContent = markedQuestions[i] ? 'Yes' : '';
-        
+
         // Completed column
         const completedCell = document.createElement('div');
         completedCell.className = 'px-3 py-2';
@@ -5104,7 +5168,7 @@ function displayReviewGrid() {
         completedCell.style.color = '#374151';
         completedCell.style.fontFamily = 'Arial, sans-serif';
         completedCell.textContent = userAnswers[i] !== undefined ? 'Yes' : '';
-        
+
         // Skipped column
         const skippedCell = document.createElement('div');
         skippedCell.className = 'px-3 py-2';
@@ -5113,34 +5177,34 @@ function displayReviewGrid() {
         skippedCell.style.color = '#374151';
         skippedCell.style.fontFamily = 'Arial, sans-serif';
         skippedCell.textContent = userAnswers[i] === undefined ? 'Yes' : '';
-        
+
         row.appendChild(nameCell);
         row.appendChild(markedCell);
         row.appendChild(completedCell);
         row.appendChild(skippedCell);
-        
+
         container.appendChild(row);
     });
 }
 
 function startTimer() {
     if (testTimer) clearInterval(testTimer);
-    
+
     testTimer = setInterval(() => {
         timeRemaining--;
         updateTimerDisplay();
-        
+
         // Auto-save state every 10 seconds (to preserve time remaining and progress)
         if (timeRemaining % 10 === 0) {
             saveFullExamState();
         }
-        
+
         if (timeRemaining <= 0) {
             clearInterval(testTimer);
             endTest();
         }
     }, 1000);
-    
+
     updateTimerDisplay();
 }
 
@@ -5148,12 +5212,12 @@ function updateTimerDisplay() {
     const minutes = Math.floor(timeRemaining / 60);
     const seconds = timeRemaining % 60;
     const timeString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    
+
     const timerElement = document.getElementById('test-timer');
     if (timerElement) {
         timerElement.textContent = timeString;
     }
-    
+
     // Also update review timer if review view is visible
     updateReviewTimer();
 }
@@ -5181,20 +5245,20 @@ function saveCompletedTest(testResult) {
         } else {
             console.log('Anonymous user - test result not saved to database');
         }
-        
+
         // Keep localStorage as fallback for now (will be removed later)
         const key = `completed-test-${testResult.subject}-${testResult.testIndex}`;
         localStorage.setItem(key, JSON.stringify(testResult));
-        
+
         // Also save to a list of all completed tests
         const completedTestsKey = 'completed-tests-list';
         let completedTests = JSON.parse(localStorage.getItem(completedTestsKey) || '[]');
-        
+
         // Check if this test already exists and remove it
-        completedTests = completedTests.filter(t => 
+        completedTests = completedTests.filter(t =>
             !(t.subject === testResult.subject && t.testIndex === testResult.testIndex)
         );
-        
+
         // Add the new result
         completedTests.push({
             subject: testResult.subject,
@@ -5202,7 +5266,7 @@ function saveCompletedTest(testResult) {
             date: testResult.date,
             score: testResult.score
         });
-        
+
         localStorage.setItem(completedTestsKey, JSON.stringify(completedTests));
     } catch (e) {
         console.error('Error saving completed test:', e);
@@ -5213,26 +5277,26 @@ function endTest() {
     examSubmitted = true;
     console.log('endTest called', { currentSubject, currentTestIndex, userAnswers: Object.keys(userAnswers).length });
     closeSubmitConfirmation();
-    
+
     // Stop the timer
     if (testTimer) {
         clearInterval(testTimer);
         testTimer = null;
     }
-    
+
     // Disable exit warning since test is being submitted
     disableTestExitWarning();
-    
+
     // Exit fullscreen
     try {
-    exitFullscreen();
+        exitFullscreen();
     } catch (e) {
         console.warn('Error exiting fullscreen:', e);
     }
-    
+
     // Show results and save attempt BEFORE clearing state
     showResults();
-    
+
     // Clear saved test state AFTER saving the attempt
     if (currentSubject && currentTestIndex !== null && currentTestIndex !== undefined) {
         clearTestState(currentSubject, currentTestIndex);
@@ -5247,36 +5311,36 @@ function showResults() {
         alert('Error: Test data not found. Please try again.');
         return;
     }
-    
+
     const test = allTestData[currentSubject] && allTestData[currentSubject][currentTestIndex];
     if (!test) {
         console.error('Cannot show results: test not found', { currentSubject, currentTestIndex });
         alert('Error: Test not found. Please try again.');
         return;
     }
-    
+
     console.log('📊 Calculating results:', {
         testLength: test.length,
         userAnswersCount: Object.keys(userAnswers).length,
         userAnswers: userAnswers
     });
-    
+
     // Track time on current question before ending
     if (currentQuestionIndex !== undefined && questionStartTime[currentQuestionIndex] !== undefined) {
         const timeSpent = Date.now() - questionStartTime[currentQuestionIndex];
         questionTimeSpent[currentQuestionIndex] = (questionTimeSpent[currentQuestionIndex] || 0) + timeSpent;
     }
-    
+
     let correct = 0;
     test.forEach((q, i) => {
         if (userAnswers[i] !== undefined && userAnswers[i] === q.a) {
             correct++;
         }
     });
-    
+
     // Use proper OAT scoring system (200-400 scale) instead of percentage
     const score = calculateOATScore(correct, test.length, currentSubject);
-    
+
     console.log('📊 Score calculation:', {
         correct,
         total: test.length,
@@ -5284,15 +5348,15 @@ function showResults() {
         subject: currentSubject,
         userAnswers: userAnswers
     });
-    
+
     // Calculate total time
     const totalTimeMs = testStartTime ? Date.now() - testStartTime : 0;
     const totalTimeSeconds = Math.max(0, Math.round(totalTimeMs / 1000));
-    
+
     // Calculate average time per question (seconds)
     const totalQuestionTime = Object.values(questionTimeSpent).reduce((sum, time) => sum + time, 0);
     const avgTimePerQuestion = test.length > 0 ? Math.round(totalQuestionTime / test.length / 1000) : 0;
-    
+
     const attemptDate = new Date();
     const attemptRecord = {
         subject: currentSubject,
@@ -5311,16 +5375,16 @@ function showResults() {
         questionTimeSpent: { ...questionTimeSpent }
     };
     lastQuestionCount = test.length;
-    
+
     console.log('💾 Saving attempt record:', attemptRecord);
-    
+
     // Save highlights and strikethroughs to localStorage only when test is completed
     try {
         saveHighlightsToLocalStorage();
     } catch (e) {
         console.error('Error saving highlights:', e);
     }
-    
+
     // Save completed test result
     try {
         saveCompletedTest({
@@ -5332,8 +5396,8 @@ function showResults() {
             totalTime: totalTimeMs,
             avgTimePerQuestion: avgTimePerQuestion,
             date: attemptRecord.date,
-            userAnswers: {...userAnswers},
-            markedQuestions: {...markedQuestions},
+            userAnswers: { ...userAnswers },
+            markedQuestions: { ...markedQuestions },
             highlights: JSON.parse(JSON.stringify(highlights)),
             passageHighlights: JSON.parse(JSON.stringify(passageHighlights))
         });
@@ -5341,7 +5405,7 @@ function showResults() {
     } catch (e) {
         console.error('Error saving completed test:', e);
     }
-    
+
     // Record the attempt in test history
     try {
         const attempts = recordTestAttempt(attemptRecord);
@@ -5352,7 +5416,7 @@ function showResults() {
         console.error('❌ Error recording test attempt:', e);
         alert('Error saving test attempt. Please check the console for details.');
     }
-    
+
     // Return to the subject dashboard (single review surface) instead of showing the legacy results view
     const subjectToReturnTo = currentSubject;
     if (subjectToReturnTo) {
@@ -5432,12 +5496,12 @@ function showResults() {
 // Show detailed review page
 function showDetailedReview() {
     detailedReviewQuestionIndex = 0;
-    
+
     // ... rest of the code remains the same ...
     // Set view mode to 'review' for detailed review
     currentViewMode = 'review';
     saveFullExamState();
-    
+
     showView('detailed-review-view');
     applyReviewFilters();
     applyExamButtonTheme();
@@ -5447,9 +5511,9 @@ function showDetailedReview() {
 function updateDetailedReview() {
     const test = allTestData[currentSubject][currentTestIndex];
     const question = test[detailedReviewQuestionIndex];
-    
+
     if (!question) return;
-    
+
     // Update header
     const reviewTitle = document.getElementById('review-test-title');
     if (reviewTitle) {
@@ -5461,18 +5525,18 @@ function updateDetailedReview() {
     }
     document.getElementById('review-q-number').textContent = detailedReviewQuestionIndex + 1;
     document.getElementById('review-q-total').textContent = test.length;
-    
+
     // Update question stem
     document.getElementById('review-q-stem').textContent = question.stem;
-    
+
     // Update answer choices
     const choicesContainer = document.getElementById('review-q-choices');
     choicesContainer.innerHTML = '';
-    
+
     const userAnswer = userAnswers[detailedReviewQuestionIndex];
     const correctAnswer = question.a;
     const isCorrect = userAnswer === correctAnswer;
-    
+
     question.c.forEach((choice, i) => {
         const choiceDiv = document.createElement('div');
         choiceDiv.className = 'review-choice';
@@ -5496,34 +5560,34 @@ function updateDetailedReview() {
         `;
         choicesContainer.appendChild(choiceDiv);
     });
-    
+
     // Update meta chips
     const statusChip = document.getElementById('review-status-chip');
     const feedbackStatus = document.getElementById('review-feedback-status');
     const correctAnswerText = document.getElementById('review-correct-answer');
     const userAnswerText = document.getElementById('review-user-answer');
     const timeSpentText = document.getElementById('review-time-spent');
-    
+
     if (statusChip && feedbackStatus) {
         statusChip.classList.remove('success', 'error');
         statusChip.classList.add(isCorrect ? 'success' : 'error');
         feedbackStatus.textContent = isCorrect ? 'Correct' : 'Incorrect';
     }
-    
+
     if (correctAnswerText) {
-    correctAnswerText.textContent = `Correct Answer: ${String.fromCharCode(65 + correctAnswer)}`;
+        correctAnswerText.textContent = `Correct Answer: ${String.fromCharCode(65 + correctAnswer)}`;
     }
     if (userAnswerText) {
         userAnswerText.textContent = `Your Answer: ${userAnswer !== undefined ? String.fromCharCode(65 + userAnswer) : 'Not answered'}`;
     }
-    
+
     const timeSpent = questionTimeSpent[detailedReviewQuestionIndex] || 0;
     const minutes = Math.floor(timeSpent / 60000);
     const seconds = Math.floor((timeSpent % 60000) / 1000);
     if (timeSpentText) {
-    timeSpentText.textContent = `Time Spent: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        timeSpentText.textContent = `Time Spent: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
-    
+
     updateReviewCounters();
     updateReviewQuestionList();
     updateTagButton();
@@ -5536,9 +5600,9 @@ function toggleSubjects(event) {
     if (event) event.preventDefault();
     const subjectsList = document.getElementById('subjects-list');
     const chevron = document.getElementById('subjects-chevron');
-    
+
     if (!subjectsList || !chevron) return;
-    
+
     // Toggle visibility
     const isHidden = subjectsList.style.display === 'none' || subjectsList.style.display === '';
     if (isHidden) {
@@ -5553,11 +5617,11 @@ function toggleSubjects(event) {
 // Toggle tag for current question in review
 function toggleTagQuestion() {
     if (!currentSubject || currentTestIndex === null || detailedReviewQuestionIndex === undefined) return;
-    
+
     const tagKey = `${currentSubject}-${currentTestIndex}-${detailedReviewQuestionIndex}`;
     let taggedQuestions = getTaggedQuestions();
     const wasTagged = !!taggedQuestions[tagKey];
-    
+
     if (wasTagged) {
         // Untag
         delete taggedQuestions[tagKey];
@@ -5566,7 +5630,7 @@ function toggleTagQuestion() {
         const test = allTestData[currentSubject][currentTestIndex];
         const question = test[detailedReviewQuestionIndex];
         if (!question) return;
-        
+
         taggedQuestions[tagKey] = {
             subject: currentSubject,
             testIndex: currentTestIndex,
@@ -5578,13 +5642,13 @@ function toggleTagQuestion() {
             date: new Date().toISOString()
         };
     }
-    
+
     saveTaggedQuestions(taggedQuestions);
     updateTagButton();
     updateReviewQuestionList();
-    
+
     // Update tagged questions list if the view is open
-    if (document.getElementById('tagged-questions-view') && 
+    if (document.getElementById('tagged-questions-view') &&
         document.getElementById('tagged-questions-view').style.display !== 'none') {
         const allTagged = getTaggedQuestions();
         taggedReviewAllItems = Object.values(allTagged);
@@ -5596,17 +5660,17 @@ function toggleTagQuestion() {
 // Update tag button appearance
 function updateTagButton() {
     if (!currentSubject || currentTestIndex === null || detailedReviewQuestionIndex === undefined) return;
-    
+
     const tagKey = `${currentSubject}-${currentTestIndex}-${detailedReviewQuestionIndex}`;
     const taggedQuestions = getTaggedQuestions();
     const isTagged = !!taggedQuestions[tagKey];
-    
+
     const tagBtn = document.getElementById('review-tag-btn');
     const tagIcon = document.getElementById('review-tag-icon');
     const tagText = document.getElementById('review-tag-text');
-    
+
     if (!tagBtn || !tagIcon || !tagText) return;
-    
+
     if (isTagged) {
         tagBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2';
         tagIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>';
@@ -5641,11 +5705,11 @@ function saveTaggedQuestions(taggedQuestions) {
 function toggleTaggedSubjectFilters() {
     const filtersList = document.getElementById('tagged-subject-filters-list');
     const chevron = document.getElementById('tagged-subject-chevron');
-    
+
     if (!filtersList || !chevron) return;
-    
+
     const isHidden = filtersList.style.display === 'none';
-    
+
     if (isHidden) {
         filtersList.style.display = 'flex';
         chevron.style.transform = 'rotate(0deg)';
@@ -5658,16 +5722,16 @@ function toggleTaggedSubjectFilters() {
 // Update tagged question counts (respects current filters)
 function updateTaggedQuestionCounts() {
     const counts = { correct: 0, incorrect: 0, unanswered: 0 };
-    
+
     // Count based on filtered items that match the subject filter
     const taggedQuestions = getTaggedQuestions();
     let itemsToCount = Object.values(taggedQuestions);
-    
+
     // Apply subject filter to counts
     if (taggedSubjectFilter !== 'all') {
         itemsToCount = itemsToCount.filter(item => item.subject === taggedSubjectFilter);
     }
-    
+
     itemsToCount.forEach(item => {
         if (item.userAnswer === undefined) {
             counts.unanswered++;
@@ -5677,11 +5741,11 @@ function updateTaggedQuestionCounts() {
             counts.incorrect++;
         }
     });
-    
+
     const correctEl = document.getElementById('tagged-correct-count');
     const incorrectEl = document.getElementById('tagged-incorrect-count');
     const unansweredEl = document.getElementById('tagged-unanswered-count');
-    
+
     if (correctEl) correctEl.textContent = counts.correct;
     if (incorrectEl) incorrectEl.textContent = counts.incorrect;
     if (unansweredEl) unansweredEl.textContent = counts.unanswered;
@@ -5690,7 +5754,7 @@ function updateTaggedQuestionCounts() {
 // Filter tagged questions by subject
 function filterTaggedBySubject(subject) {
     taggedSubjectFilter = subject;
-    
+
     // Map subject names to button IDs
     const subjectIdMap = {
         'all': 'tagged-subject-all',
@@ -5701,23 +5765,23 @@ function filterTaggedBySubject(subject) {
         'Physics': 'tagged-subject-physics',
         'Quantitative Reasoning': 'tagged-subject-quant'
     };
-    
+
     // Update active button
     document.querySelectorAll('#tagged-questions-view .review-sidebar-filters:first-of-type .review-filter-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    
+
     const buttonId = subjectIdMap[subject];
     if (buttonId) {
         document.getElementById(buttonId)?.classList.add('active');
     }
-    
+
     // Update title to show selected subject
     const titleEl = document.getElementById('tagged-test-title');
     if (titleEl) {
         titleEl.textContent = subject === 'all' ? 'All Tagged Questions' : `${subject} - Tagged Questions`;
     }
-    
+
     // Apply filters
     applyTaggedFilters();
 }
@@ -5726,45 +5790,45 @@ function filterTaggedBySubject(subject) {
 function applyTaggedFilters() {
     const taggedQuestions = getTaggedQuestions();
     let allItems = Object.values(taggedQuestions);
-    
+
     // Sort by date (newest first)
     allItems.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
+
     // Filter by subject
     if (taggedSubjectFilter !== 'all') {
         allItems = allItems.filter(item => item.subject === taggedSubjectFilter);
     }
-    
+
     taggedReviewAllItems = allItems;
-    
+
     // Filter by status
     taggedReviewFilteredItems = allItems.filter(item => {
         const isCorrect = item.userAnswer === item.correctAnswer;
         const isAnswered = item.userAnswer !== undefined;
-        
+
         if (taggedReviewFilter === 'all') return true;
         if (taggedReviewFilter === 'correct') return isCorrect;
         if (taggedReviewFilter === 'incorrect') return !isCorrect && isAnswered;
         if (taggedReviewFilter === 'unanswered') return !isAnswered;
         return true;
     });
-    
+
     // Apply search if any
     const searchTerm = taggedReviewSearch.toLowerCase();
     if (searchTerm) {
-        taggedReviewFilteredItems = taggedReviewFilteredItems.filter(item => 
+        taggedReviewFilteredItems = taggedReviewFilteredItems.filter(item =>
             item.question.toLowerCase().includes(searchTerm)
         );
     }
-    
+
     // Update counts based on filtered subject
     updateTaggedQuestionCounts();
-    
+
     // Adjust index if needed
     if (taggedReviewIndex >= taggedReviewFilteredItems.length) {
         taggedReviewIndex = Math.max(0, taggedReviewFilteredItems.length - 1);
     }
-    
+
     if (taggedReviewFilteredItems.length > 0) {
         updateTaggedReview();
     }
@@ -5774,15 +5838,15 @@ function applyTaggedFilters() {
 // Show tagged questions view
 function showTaggedQuestions(event) {
     if (event) event.preventDefault();
-    
+
     const taggedQuestions = getTaggedQuestions();
     taggedReviewAllItems = Object.values(taggedQuestions);
-    
+
     if (taggedReviewAllItems.length === 0) {
         alert('No tagged questions yet. Tag questions during review to see them here.');
         return;
     }
-    
+
     // Sort by date (newest first)
     taggedReviewAllItems.sort((a, b) => new Date(b.date) - new Date(a.date));
     taggedReviewFilteredItems = taggedReviewAllItems.slice();
@@ -5790,26 +5854,26 @@ function showTaggedQuestions(event) {
     taggedReviewFilter = 'all';
     taggedSubjectFilter = 'all';
     taggedReviewSearch = '';
-    
+
     // Reset filter buttons
     document.querySelectorAll('#tagged-questions-view .review-filter-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     document.getElementById('tagged-subject-all')?.classList.add('active');
     document.getElementById('tagged-filter-all')?.classList.add('active');
-    
+
     // Update counts
     updateTaggedQuestionCounts();
-    
+
     showView('tagged-questions-view');
-    
+
     // Update dark mode toggle icon
     if (window.lucide) {
         setTimeout(() => {
             lucide.createIcons();
         }, 100);
     }
-    
+
     if (taggedReviewFilteredItems.length > 0) {
         updateTaggedReview();
     }
@@ -5819,13 +5883,13 @@ function showTaggedQuestions(event) {
 // Filter tagged questions by status
 function filterTaggedQuestions(filter) {
     taggedReviewFilter = filter;
-    
+
     // Update active button
     document.querySelectorAll('#tagged-questions-view .review-sidebar-filters:last-of-type .review-filter-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     document.getElementById(`tagged-filter-${filter}`)?.classList.add('active');
-    
+
     // Apply all filters
     applyTaggedFilters();
 }
@@ -5841,24 +5905,24 @@ function handleTaggedSearch() {
 function updateTaggedQuestionList() {
     const listContainer = document.getElementById('tagged-question-list');
     if (!listContainer) return;
-    
+
     listContainer.innerHTML = '';
-    
+
     if (taggedReviewFilteredItems.length === 0) {
         listContainer.innerHTML = '<div class="p-4 text-center text-sm opacity-60">No questions match filter</div>';
         return;
     }
-    
+
     taggedReviewFilteredItems.forEach((item, index) => {
         const isCorrect = item.userAnswer === item.correctAnswer;
         const isAnswered = item.userAnswer !== undefined;
         const isActive = index === taggedReviewIndex;
-        
+
         let statusClass = 'unanswered';
         if (isAnswered) {
             statusClass = isCorrect ? 'correct' : 'incorrect';
         }
-        
+
         const listItem = document.createElement('div');
         listItem.className = 'review-question-item';
         if (isActive) listItem.classList.add('active');
@@ -5868,7 +5932,7 @@ function updateTaggedQuestionList() {
             updateTaggedReview();
             updateTaggedQuestionList();
         };
-        
+
         listItem.innerHTML = `
             <span class="status-dot"></span>
             <span class="flex-1 text-sm">Question ${item.questionIndex + 1}</span>
@@ -5881,27 +5945,27 @@ function updateTaggedQuestionList() {
 // Update tagged question display
 function updateTaggedReview() {
     if (taggedReviewFilteredItems.length === 0) return;
-    
+
     const currentItem = taggedReviewFilteredItems[taggedReviewIndex];
     if (!currentItem) return;
-    
+
     // Load the question data
     const test = allTestData[currentItem.subject]?.[currentItem.testIndex];
     if (!test) return;
-    
+
     const question = test[currentItem.questionIndex];
     if (!question) return;
-    
+
     const isAnswered = currentItem.userAnswer !== undefined;
     const isCorrect = isAnswered && currentItem.userAnswer === question.a;
     const userAnswerLetter = isAnswered ? String.fromCharCode(65 + currentItem.userAnswer) : '--';
     const correctAnswerLetter = String.fromCharCode(65 + question.a);
-    
+
     // Update header
     document.getElementById('tagged-q-number').textContent = taggedReviewIndex + 1;
     document.getElementById('tagged-q-total').textContent = taggedReviewFilteredItems.length;
     document.getElementById('tagged-q-stem').textContent = question.stem;
-    
+
     // Update status chips
     const statusChip = document.getElementById('tagged-status-chip');
     const feedbackStatus = document.getElementById('tagged-feedback-status');
@@ -5915,14 +5979,14 @@ function updateTaggedReview() {
         statusChip.className = 'review-meta-chip error';
         feedbackStatus.textContent = 'Incorrect';
     }
-    
+
     document.getElementById('tagged-correct-answer').textContent = `Correct Answer: ${correctAnswerLetter}`;
     document.getElementById('tagged-user-answer').textContent = `Your Answer: ${userAnswerLetter}`;
     const subjectInfoEl = document.getElementById('tagged-subject-info');
     if (subjectInfoEl) {
         subjectInfoEl.textContent = `${currentItem.subject} Test #${currentItem.testIndex + 1}`;
     }
-    
+
     // Update choices
     const choicesContainer = document.getElementById('tagged-q-choices');
     if (choicesContainer) {
@@ -5930,16 +5994,16 @@ function updateTaggedReview() {
         question.c.forEach((choice, index) => {
             const choiceDiv = document.createElement('div');
             choiceDiv.className = 'review-choice';
-            
+
             const isUserAnswer = currentItem.userAnswer === index;
             const isCorrectAnswer = question.a === index;
-            
+
             if (isCorrectAnswer) {
                 choiceDiv.classList.add('correct');
             } else if (isUserAnswer) {
                 choiceDiv.classList.add('incorrect');
             }
-            
+
             const letter = String.fromCharCode(65 + index);
             choiceDiv.innerHTML = `
                 <label>
@@ -5952,13 +6016,13 @@ function updateTaggedReview() {
             choicesContainer.appendChild(choiceDiv);
         });
     }
-    
+
     // Update explanation
     const explanationEl = document.getElementById('tagged-explanation');
     if (explanationEl) {
         explanationEl.innerHTML = `<p>${escapeHtml(question.explanation || 'No explanation available.')}</p>`;
     }
-    
+
     // Update progress
     document.getElementById('tagged-progress-count').textContent = `${taggedReviewIndex + 1} / ${taggedReviewFilteredItems.length}`;
 }
@@ -5983,26 +6047,26 @@ function taggedNextQuestion() {
 // Toggle tag from tagged questions view
 function toggleTagQuestionFromTagged() {
     if (taggedReviewFilteredItems.length === 0) return;
-    
+
     const currentItem = taggedReviewFilteredItems[taggedReviewIndex];
     const tagKey = `${currentItem.subject}-${currentItem.testIndex}-${currentItem.questionIndex}`;
-    
+
     // Remove the tag
     const taggedQuestions = getTaggedQuestions();
     delete taggedQuestions[tagKey];
     saveTaggedQuestions(taggedQuestions);
-    
+
     // Remove from filtered items
     taggedReviewFilteredItems.splice(taggedReviewIndex, 1);
-    taggedReviewAllItems = taggedReviewAllItems.filter(item => 
+    taggedReviewAllItems = taggedReviewAllItems.filter(item =>
         `${item.subject}-${item.testIndex}-${item.questionIndex}` !== tagKey
     );
-    
+
     // Adjust index if needed
     if (taggedReviewIndex >= taggedReviewFilteredItems.length) {
         taggedReviewIndex = Math.max(0, taggedReviewFilteredItems.length - 1);
     }
-    
+
     // Update display
     if (taggedReviewFilteredItems.length === 0) {
         showView('dashboard-view');
@@ -6017,10 +6081,10 @@ function toggleTagQuestionFromTagged() {
 function displayTaggedQuestions() {
     const container = document.getElementById('tagged-questions-list');
     if (!container) return;
-    
+
     const taggedQuestions = getTaggedQuestions();
     const taggedArray = Object.values(taggedQuestions);
-    
+
     if (taggedArray.length === 0) {
         container.innerHTML = `
             <div class="text-center py-12">
@@ -6033,22 +6097,22 @@ function displayTaggedQuestions() {
         `;
         return;
     }
-    
+
     // Sort by date (newest first)
     taggedArray.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
+
     container.innerHTML = '';
-    
+
     taggedArray.forEach((tagged, index) => {
         const tagDate = new Date(tagged.date);
-        const dateStr = tagDate.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
+        const dateStr = tagDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
             day: 'numeric'
         });
-        
+
         const isCorrect = tagged.userAnswer === tagged.correctAnswer;
-        
+
         const questionDiv = document.createElement('div');
         questionDiv.className = 'bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer';
         questionDiv.onclick = () => viewTaggedQuestion(tagged);
@@ -6057,9 +6121,8 @@ function displayTaggedQuestions() {
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-2">
                         <h3 class="text-lg font-semibold text-gray-900">${tagged.subject} - Test #${tagged.testIndex + 1}, Question ${tagged.questionIndex + 1}</h3>
-                        <span class="px-3 py-1 rounded-full text-sm font-medium ${
-                            isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }">
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }">
                             ${isCorrect ? 'Correct' : 'Incorrect'}
                         </span>
                     </div>
@@ -6087,7 +6150,7 @@ function viewTaggedQuestion(tagged) {
     detailedReviewQuestionIndex = tagged.questionIndex;
     userAnswers = {};
     userAnswers[tagged.questionIndex] = tagged.userAnswer;
-    
+
     // Show detailed review
     showDetailedReview();
 }
@@ -6101,7 +6164,7 @@ function updateReviewQuestionList() {
     listContainer.innerHTML = '';
     const filter = (window.currentReviewFilter || 'all');
     const searchTerm = (window.currentReviewSearch || '').toLowerCase();
-    
+
     test.forEach((q, i) => {
         const isCorrect = userAnswers[i] === q.a;
         const isAnswered = userAnswers[i] !== undefined;
@@ -6123,7 +6186,7 @@ function updateReviewQuestionList() {
             detailedReviewQuestionIndex = i;
             updateDetailedReview();
         };
-        
+
         listItem.innerHTML = `
             <span class="status-dot"></span>
             <span class="flex-1 text-sm">Question ${i + 1}</span>
@@ -6568,13 +6631,13 @@ function showExhibit() {
         showCalculator();
         return;
     }
-    
+
     // For General Chemistry and other subjects, show periodic table
     const modal = document.getElementById('periodic-table-modal');
     if (modal) {
         modal.style.display = 'flex';
         const container = document.getElementById('periodic-table-content');
-        
+
         // Generate the complete periodic table HTML
         container.innerHTML = generatePeriodicTable();
     }
@@ -6591,36 +6654,36 @@ function generatePeriodicTable() {
     // Main periodic table elements
     const elements = [
         // Period 1
-        [{num: 1, sym: 'H', mass: '1.01'}, {num: 2, sym: 'He', mass: '4.00'}],
+        [{ num: 1, sym: 'H', mass: '1.01' }, { num: 2, sym: 'He', mass: '4.00' }],
         // Period 2
-        [{num: 3, sym: 'Li', mass: '6.94'}, {num: 4, sym: 'Be', mass: '9.01'}, {num: 5, sym: 'B', mass: '10.81'}, {num: 6, sym: 'C', mass: '12.01'}, {num: 7, sym: 'N', mass: '14.01'}, {num: 8, sym: 'O', mass: '16.00'}, {num: 9, sym: 'F', mass: '19.00'}, {num: 10, sym: 'Ne', mass: '20.18'}],
+        [{ num: 3, sym: 'Li', mass: '6.94' }, { num: 4, sym: 'Be', mass: '9.01' }, { num: 5, sym: 'B', mass: '10.81' }, { num: 6, sym: 'C', mass: '12.01' }, { num: 7, sym: 'N', mass: '14.01' }, { num: 8, sym: 'O', mass: '16.00' }, { num: 9, sym: 'F', mass: '19.00' }, { num: 10, sym: 'Ne', mass: '20.18' }],
         // Period 3
-        [{num: 11, sym: 'Na', mass: '22.99'}, {num: 12, sym: 'Mg', mass: '24.31'}, {num: 13, sym: 'Al', mass: '26.98'}, {num: 14, sym: 'Si', mass: '28.09'}, {num: 15, sym: 'P', mass: '30.97'}, {num: 16, sym: 'S', mass: '32.06'}, {num: 17, sym: 'Cl', mass: '35.45'}, {num: 18, sym: 'Ar', mass: '39.95'}],
+        [{ num: 11, sym: 'Na', mass: '22.99' }, { num: 12, sym: 'Mg', mass: '24.31' }, { num: 13, sym: 'Al', mass: '26.98' }, { num: 14, sym: 'Si', mass: '28.09' }, { num: 15, sym: 'P', mass: '30.97' }, { num: 16, sym: 'S', mass: '32.06' }, { num: 17, sym: 'Cl', mass: '35.45' }, { num: 18, sym: 'Ar', mass: '39.95' }],
         // Period 4
-        [{num: 19, sym: 'K', mass: '39.10'}, {num: 20, sym: 'Ca', mass: '40.08'}, {num: 21, sym: 'Sc', mass: '44.96'}, {num: 22, sym: 'Ti', mass: '47.90'}, {num: 23, sym: 'V', mass: '50.94'}, {num: 24, sym: 'Cr', mass: '52.00'}, {num: 25, sym: 'Mn', mass: '54.94'}, {num: 26, sym: 'Fe', mass: '55.85'}, {num: 27, sym: 'Co', mass: '58.93'}, {num: 28, sym: 'Ni', mass: '58.71'}, {num: 29, sym: 'Cu', mass: '63.55'}, {num: 30, sym: 'Zn', mass: '65.37'}, {num: 31, sym: 'Ga', mass: '69.72'}, {num: 32, sym: 'Ge', mass: '72.59'}, {num: 33, sym: 'As', mass: '74.92'}, {num: 34, sym: 'Se', mass: '78.96'}, {num: 35, sym: 'Br', mass: '79.90'}, {num: 36, sym: 'Kr', mass: '83.80'}],
+        [{ num: 19, sym: 'K', mass: '39.10' }, { num: 20, sym: 'Ca', mass: '40.08' }, { num: 21, sym: 'Sc', mass: '44.96' }, { num: 22, sym: 'Ti', mass: '47.90' }, { num: 23, sym: 'V', mass: '50.94' }, { num: 24, sym: 'Cr', mass: '52.00' }, { num: 25, sym: 'Mn', mass: '54.94' }, { num: 26, sym: 'Fe', mass: '55.85' }, { num: 27, sym: 'Co', mass: '58.93' }, { num: 28, sym: 'Ni', mass: '58.71' }, { num: 29, sym: 'Cu', mass: '63.55' }, { num: 30, sym: 'Zn', mass: '65.37' }, { num: 31, sym: 'Ga', mass: '69.72' }, { num: 32, sym: 'Ge', mass: '72.59' }, { num: 33, sym: 'As', mass: '74.92' }, { num: 34, sym: 'Se', mass: '78.96' }, { num: 35, sym: 'Br', mass: '79.90' }, { num: 36, sym: 'Kr', mass: '83.80' }],
         // Period 5
-        [{num: 37, sym: 'Rb', mass: '85.47'}, {num: 38, sym: 'Sr', mass: '87.62'}, {num: 39, sym: 'Y', mass: '88.91'}, {num: 40, sym: 'Zr', mass: '91.22'}, {num: 41, sym: 'Nb', mass: '92.91'}, {num: 42, sym: 'Mo', mass: '95.94'}, {num: 43, sym: 'Tc', mass: '(97)'}, {num: 44, sym: 'Ru', mass: '101.07'}, {num: 45, sym: 'Rh', mass: '102.91'}, {num: 46, sym: 'Pd', mass: '106.40'}, {num: 47, sym: 'Ag', mass: '107.87'}, {num: 48, sym: 'Cd', mass: '112.40'}, {num: 49, sym: 'In', mass: '114.82'}, {num: 50, sym: 'Sn', mass: '118.69'}, {num: 51, sym: 'Sb', mass: '121.75'}, {num: 52, sym: 'Te', mass: '127.60'}, {num: 53, sym: 'I', mass: '126.90'}, {num: 54, sym: 'Xe', mass: '131.30'}],
+        [{ num: 37, sym: 'Rb', mass: '85.47' }, { num: 38, sym: 'Sr', mass: '87.62' }, { num: 39, sym: 'Y', mass: '88.91' }, { num: 40, sym: 'Zr', mass: '91.22' }, { num: 41, sym: 'Nb', mass: '92.91' }, { num: 42, sym: 'Mo', mass: '95.94' }, { num: 43, sym: 'Tc', mass: '(97)' }, { num: 44, sym: 'Ru', mass: '101.07' }, { num: 45, sym: 'Rh', mass: '102.91' }, { num: 46, sym: 'Pd', mass: '106.40' }, { num: 47, sym: 'Ag', mass: '107.87' }, { num: 48, sym: 'Cd', mass: '112.40' }, { num: 49, sym: 'In', mass: '114.82' }, { num: 50, sym: 'Sn', mass: '118.69' }, { num: 51, sym: 'Sb', mass: '121.75' }, { num: 52, sym: 'Te', mass: '127.60' }, { num: 53, sym: 'I', mass: '126.90' }, { num: 54, sym: 'Xe', mass: '131.30' }],
         // Period 6
-        [{num: 55, sym: 'Cs', mass: '132.91'}, {num: 56, sym: 'Ba', mass: '137.34'}, {num: 57, sym: 'La', mass: '138.91'}, {num: 72, sym: 'Hf', mass: '178.49'}, {num: 73, sym: 'Ta', mass: '180.95'}, {num: 74, sym: 'W', mass: '183.85'}, {num: 75, sym: 'Re', mass: '186.20'}, {num: 76, sym: 'Os', mass: '190.20'}, {num: 77, sym: 'Ir', mass: '192.20'}, {num: 78, sym: 'Pt', mass: '195.08'}, {num: 79, sym: 'Au', mass: '196.97'}, {num: 80, sym: 'Hg', mass: '200.59'}, {num: 81, sym: 'Tl', mass: '204.37'}, {num: 82, sym: 'Pb', mass: '207.19'}, {num: 83, sym: 'Bi', mass: '208.98'}, {num: 84, sym: 'Po', mass: '210.00'}, {num: 85, sym: 'At', mass: '210.00'}, {num: 86, sym: 'Rn', mass: '222.00'}],
+        [{ num: 55, sym: 'Cs', mass: '132.91' }, { num: 56, sym: 'Ba', mass: '137.34' }, { num: 57, sym: 'La', mass: '138.91' }, { num: 72, sym: 'Hf', mass: '178.49' }, { num: 73, sym: 'Ta', mass: '180.95' }, { num: 74, sym: 'W', mass: '183.85' }, { num: 75, sym: 'Re', mass: '186.20' }, { num: 76, sym: 'Os', mass: '190.20' }, { num: 77, sym: 'Ir', mass: '192.20' }, { num: 78, sym: 'Pt', mass: '195.08' }, { num: 79, sym: 'Au', mass: '196.97' }, { num: 80, sym: 'Hg', mass: '200.59' }, { num: 81, sym: 'Tl', mass: '204.37' }, { num: 82, sym: 'Pb', mass: '207.19' }, { num: 83, sym: 'Bi', mass: '208.98' }, { num: 84, sym: 'Po', mass: '210.00' }, { num: 85, sym: 'At', mass: '210.00' }, { num: 86, sym: 'Rn', mass: '222.00' }],
         // Period 7
-        [{num: 87, sym: 'Fr', mass: '215.00'}, {num: 88, sym: 'Ra', mass: '226.03'}, {num: 89, sym: 'Ac', mass: '227.03'}, {num: 104, sym: 'Rf', mass: '(261)'}, {num: 105, sym: 'Db', mass: '(262)'}, {num: 106, sym: 'Sg', mass: '(266)'}, {num: 107, sym: 'Bh', mass: '(264)'}, {num: 108, sym: 'Hs', mass: '(269)'}, {num: 109, sym: 'Mt', mass: '(268)'}, {num: 110, sym: 'Ds', mass: '(271)'}, {num: 111, sym: 'Rg', mass: '(272)'}, {num: 112, sym: 'Cn', mass: '(277)'}, {num: 113, sym: 'Nh', mass: '(286)'}, {num: 114, sym: 'Fl', mass: '(289)'}, {num: 115, sym: 'Mc', mass: '(290)'}, {num: 116, sym: 'Lv', mass: '(293)'}, {num: 117, sym: 'Ts', mass: '(294)'}, {num: 118, sym: 'Og', mass: '(294)'}]
+        [{ num: 87, sym: 'Fr', mass: '215.00' }, { num: 88, sym: 'Ra', mass: '226.03' }, { num: 89, sym: 'Ac', mass: '227.03' }, { num: 104, sym: 'Rf', mass: '(261)' }, { num: 105, sym: 'Db', mass: '(262)' }, { num: 106, sym: 'Sg', mass: '(266)' }, { num: 107, sym: 'Bh', mass: '(264)' }, { num: 108, sym: 'Hs', mass: '(269)' }, { num: 109, sym: 'Mt', mass: '(268)' }, { num: 110, sym: 'Ds', mass: '(271)' }, { num: 111, sym: 'Rg', mass: '(272)' }, { num: 112, sym: 'Cn', mass: '(277)' }, { num: 113, sym: 'Nh', mass: '(286)' }, { num: 114, sym: 'Fl', mass: '(289)' }, { num: 115, sym: 'Mc', mass: '(290)' }, { num: 116, sym: 'Lv', mass: '(293)' }, { num: 117, sym: 'Ts', mass: '(294)' }, { num: 118, sym: 'Og', mass: '(294)' }]
     ];
-    
+
     // Lanthanides (58-71)
     const lanthanides = [
-        {num: 58, sym: 'Ce', mass: '140.12'}, {num: 59, sym: 'Pr', mass: '140.91'}, {num: 60, sym: 'Nd', mass: '144.24'}, {num: 61, sym: 'Pm', mass: '145.00'}, {num: 62, sym: 'Sm', mass: '150.35'}, {num: 63, sym: 'Eu', mass: '151.96'}, {num: 64, sym: 'Gd', mass: '157.25'}, {num: 65, sym: 'Tb', mass: '158.92'}, {num: 66, sym: 'Dy', mass: '162.50'}, {num: 67, sym: 'Ho', mass: '164.93'}, {num: 68, sym: 'Er', mass: '167.26'}, {num: 69, sym: 'Tm', mass: '168.93'}, {num: 70, sym: 'Yb', mass: '173.04'}, {num: 71, sym: 'Lu', mass: '174.97'}
+        { num: 58, sym: 'Ce', mass: '140.12' }, { num: 59, sym: 'Pr', mass: '140.91' }, { num: 60, sym: 'Nd', mass: '144.24' }, { num: 61, sym: 'Pm', mass: '145.00' }, { num: 62, sym: 'Sm', mass: '150.35' }, { num: 63, sym: 'Eu', mass: '151.96' }, { num: 64, sym: 'Gd', mass: '157.25' }, { num: 65, sym: 'Tb', mass: '158.92' }, { num: 66, sym: 'Dy', mass: '162.50' }, { num: 67, sym: 'Ho', mass: '164.93' }, { num: 68, sym: 'Er', mass: '167.26' }, { num: 69, sym: 'Tm', mass: '168.93' }, { num: 70, sym: 'Yb', mass: '173.04' }, { num: 71, sym: 'Lu', mass: '174.97' }
     ];
-    
+
     // Actinides (90-103)
     const actinides = [
-        {num: 90, sym: 'Th', mass: '232.04'}, {num: 91, sym: 'Pa', mass: '231.00'}, {num: 92, sym: 'U', mass: '238.03'}, {num: 93, sym: 'Np', mass: '237.05'}, {num: 94, sym: 'Pu', mass: '239.05'}, {num: 95, sym: 'Am', mass: '241.06'}, {num: 96, sym: 'Cm', mass: '244.06'}, {num: 97, sym: 'Bk', mass: '249.08'}, {num: 98, sym: 'Cf', mass: '252.08'}, {num: 99, sym: 'Es', mass: '252.08'}, {num: 100, sym: 'Fm', mass: '257.10'}, {num: 101, sym: 'Md', mass: '258.10'}, {num: 102, sym: 'No', mass: '259.10'}, {num: 103, sym: 'Lr', mass: '262.11'}
+        { num: 90, sym: 'Th', mass: '232.04' }, { num: 91, sym: 'Pa', mass: '231.00' }, { num: 92, sym: 'U', mass: '238.03' }, { num: 93, sym: 'Np', mass: '237.05' }, { num: 94, sym: 'Pu', mass: '239.05' }, { num: 95, sym: 'Am', mass: '241.06' }, { num: 96, sym: 'Cm', mass: '244.06' }, { num: 97, sym: 'Bk', mass: '249.08' }, { num: 98, sym: 'Cf', mass: '252.08' }, { num: 99, sym: 'Es', mass: '252.08' }, { num: 100, sym: 'Fm', mass: '257.10' }, { num: 101, sym: 'Md', mass: '258.10' }, { num: 102, sym: 'No', mass: '259.10' }, { num: 103, sym: 'Lr', mass: '262.11' }
     ];
-    
+
     // Patched function to allow for custom styles (e.g., f-block highlighting)
     function createElementCell(el) {
         // Handle a typo in the user's data for Phosphorus
-        if (el.num === 15 && !el.sym) el.sym = 'P'; 
-        
+        if (el.num === 15 && !el.sym) el.sym = 'P';
+
         return `
             <div style="border: 1px solid #000; padding: 3px; text-align: center; min-width: 50px; min-height: 50px; display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; background: white;">
                 <div style="font-size: 8px; text-align: left; padding-left: 2px; line-height: 1;">${el.num}</div>
@@ -6629,7 +6692,7 @@ function generatePeriodicTable() {
             </div>
         `;
     }
-    
+
     let html = `
         <div style="font-family: Arial, sans-serif; color: #000; background: white; padding: 20px; max-width: 1200px; margin: auto; overflow-x: auto;">
             <h1 style="text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px;">PERIODIC TABLE OF THE ELEMENTS</h1>
@@ -6637,62 +6700,62 @@ function generatePeriodicTable() {
             <!-- Group numbers -->
             <div style="display: grid; grid-template-columns: 0px repeat(18, 1fr); gap: 1px; margin-bottom: 3px; min-width: 900px;">
                 <div style="border: 1px solid #000; background: white; border-width: 0;"></div>
-                ${Array.from({length: 18}, (_, i) => `<div style="text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #000; background: white; padding: 2px;">${i + 1}</div>`).join('')}
+                ${Array.from({ length: 18 }, (_, i) => `<div style="text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #000; background: white; padding: 2px;">${i + 1}</div>`).join('')}
             </div>
             
             <!-- Main table -->
             ${elements.map((period, periodIdx) => {
-                const periodNum = periodIdx + 1;
-                let row = `<div style="display: grid; grid-template-columns: 0px repeat(18, 1fr); gap: 1px; margin-bottom: 1px; min-width: 900px;">`;
-                row += `<div style="text-align: center; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 1px solid #000; background: white; border-width: 0;"></div>`;
-                
-                // Fill in elements based on period
-                if (periodNum === 1) {
-                    // Period 1: H in column 1, He in column 18
-                    row += createElementCell(period[0]);
-                    for (let i = 0; i < 16; i++) row += `<div style="min-height: 50px;"></div>`;
-                    row += createElementCell(period[1]);
-                } else if (periodNum === 2 || periodNum === 3) {
-                    // Periods 2-3: elements in columns 1-2, then 10 empty, then 13-18
-                    row += createElementCell(period[0]); // Col 1 (e.g., Li)
-                    row += createElementCell(period[1]); // Col 2 (e.g., Be)
-                    
-                    // Add 10 empty spacer cells for groups 3-12
-                    for (let i = 0; i < 10; i++) {
-                        row += `<div style="min-height: 50px;"></div>`;
-                    }
-                    
-                    // Add remaining 6 elements (groups 13-18)
-                    for (let i = 2; i < period.length; i++) {
-                        row += createElementCell(period[i]);
-                    }
-                } else if (periodNum === 4 || periodNum === 5) {
-                    // Periods 4-5: all 18 elements
-                    period.forEach(el => row += createElementCell(el));
-                } else if (periodNum === 6) {
-                    // Period 6: Data array has [55, 56, 57, 72...86] which is 18 elements.
-                    row += createElementCell(period[0]); // Cs
-                    row += createElementCell(period[1]); // Ba
-                    row += createElementCell(period[2]); // La
-                    // Add the rest of the d-block and p-block
-                    for (let i = 3; i < period.length; i++) {
-                        row += createElementCell(period[i]);
-                    }
-                } else if (periodNum === 7) {
-                    // Period 7: Data array now has [87...118], all 18 elements.
-                    // Render them sequentially.
-                    row += createElementCell(period[0]); // Fr
-                    row += createElementCell(period[1]); // Ra
-                    row += createElementCell(period[2]); // Ac
-                    // Add the rest of the d-block and p-block
-                    for (let i = 3; i < period.length; i++) {
-                        row += createElementCell(period[i]);
-                    }
-                }
-                
-                row += `</div>`;
-                return row;
-            }).join('')}
+        const periodNum = periodIdx + 1;
+        let row = `<div style="display: grid; grid-template-columns: 0px repeat(18, 1fr); gap: 1px; margin-bottom: 1px; min-width: 900px;">`;
+        row += `<div style="text-align: center; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 1px solid #000; background: white; border-width: 0;"></div>`;
+
+        // Fill in elements based on period
+        if (periodNum === 1) {
+            // Period 1: H in column 1, He in column 18
+            row += createElementCell(period[0]);
+            for (let i = 0; i < 16; i++) row += `<div style="min-height: 50px;"></div>`;
+            row += createElementCell(period[1]);
+        } else if (periodNum === 2 || periodNum === 3) {
+            // Periods 2-3: elements in columns 1-2, then 10 empty, then 13-18
+            row += createElementCell(period[0]); // Col 1 (e.g., Li)
+            row += createElementCell(period[1]); // Col 2 (e.g., Be)
+
+            // Add 10 empty spacer cells for groups 3-12
+            for (let i = 0; i < 10; i++) {
+                row += `<div style="min-height: 50px;"></div>`;
+            }
+
+            // Add remaining 6 elements (groups 13-18)
+            for (let i = 2; i < period.length; i++) {
+                row += createElementCell(period[i]);
+            }
+        } else if (periodNum === 4 || periodNum === 5) {
+            // Periods 4-5: all 18 elements
+            period.forEach(el => row += createElementCell(el));
+        } else if (periodNum === 6) {
+            // Period 6: Data array has [55, 56, 57, 72...86] which is 18 elements.
+            row += createElementCell(period[0]); // Cs
+            row += createElementCell(period[1]); // Ba
+            row += createElementCell(period[2]); // La
+            // Add the rest of the d-block and p-block
+            for (let i = 3; i < period.length; i++) {
+                row += createElementCell(period[i]);
+            }
+        } else if (periodNum === 7) {
+            // Period 7: Data array now has [87...118], all 18 elements.
+            // Render them sequentially.
+            row += createElementCell(period[0]); // Fr
+            row += createElementCell(period[1]); // Ra
+            row += createElementCell(period[2]); // Ac
+            // Add the rest of the d-block and p-block
+            for (let i = 3; i < period.length; i++) {
+                row += createElementCell(period[i]);
+            }
+        }
+
+        row += `</div>`;
+        return row;
+    }).join('')}
             
             <!-- Lanthanides -->
             <div style="margin-top: 15px; min-width: 900px;">
@@ -6746,7 +6809,7 @@ function generatePeriodicTable() {
             </div>
         </div>
     `;
-    
+
     return html;
 }
 
@@ -6808,7 +6871,7 @@ function showCalculator() {
     if (periodicTableModal) {
         periodicTableModal.style.display = 'none';
     }
-    
+
     // Hide Organic Chemistry floating buttons when calculator is shown
     const organicChemAuthorBtn = document.getElementById('organic-chem-author-btn');
     const ochemResetBtn = document.getElementById('ochem-reset-btn');
@@ -6818,7 +6881,7 @@ function showCalculator() {
     if (ochemResetBtn) {
         ochemResetBtn.style.display = 'none';
     }
-    
+
     const modal = document.getElementById('calculator-modal');
     if (modal) {
         modal.style.display = 'flex';
@@ -6831,7 +6894,7 @@ function showCalculator() {
         const memDisplay = memEl();
         if (display) display.value = '0';
         if (memDisplay) memDisplay.value = '';
-        
+
         // Wire calculator if not already wired
         setTimeout(() => {
             wireCalculator();
@@ -6844,7 +6907,7 @@ function hideCalculator() {
     if (modal) {
         modal.style.display = 'none';
     }
-    
+
     // Restore Organic Chemistry floating buttons if we're in an Organic Chemistry test
     if (currentSubject === 'Organic Chemistry') {
         const organicChemAuthorBtn = document.getElementById('organic-chem-author-btn');
@@ -6900,7 +6963,7 @@ function handlePercent() {
 function press(key) {
     const display = displayEl();
     if (!display) return;
-    
+
     const d = getDisplayNumber();
     if (/^\d$/.test(key)) {
         if (calcOverwrite || display.value === '0') setDisplay(Number(key));
@@ -6948,20 +7011,20 @@ function press(key) {
 function wireCalculator() {
     const buttons = document.querySelectorAll('.calc-btn');
     if (buttons.length === 0) return;
-    
+
     buttons.forEach(btn => {
         if (!btn.hasAttribute('data-wired')) {
             btn.addEventListener('click', () => press(btn.getAttribute('data-key')));
             btn.setAttribute('data-wired', 'true');
         }
     });
-    
+
     // Only add keyboard listener once
     if (!window.calcKeyboardWired) {
         window.addEventListener('keydown', e => {
-    const modal = document.getElementById('calculator-modal');
+            const modal = document.getElementById('calculator-modal');
             if (!modal || modal.style.display === 'none') return;
-            
+
             const k = e.key;
             if (/^[0-9]$/.test(k)) { e.preventDefault(); return press(k); }
             if (['+', '-', '*', '/'].includes(k)) { e.preventDefault(); return press(k); }
@@ -6982,22 +7045,22 @@ function initializeCalculator() {
         overwrite: true,
         mem: 0
     };
-    
+
     const display = document.getElementById('calc-display');
     const memDisplay = document.getElementById('calc-mem');
     const buttonsContainer = document.getElementById('calc-buttons');
-    
+
     if (!display || !buttonsContainer) return;
-    
+
     display.value = '0';
     memDisplay.value = '';
-    
+
     // Clear container
     buttonsContainer.innerHTML = '';
-    
+
     // Set up grid: 6 columns, 4 rows (each row is 34px + 3px gap = 37px total per row)
     buttonsContainer.style.cssText = 'display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 34px); gap: 3px; position: relative;';
-    
+
     // Button definitions - Row 1 (top row of main grid)
     // Colors: Memory=orange, Numbers=black, Operators=red, Special=blue
     const row1 = [
@@ -7008,7 +7071,7 @@ function initializeCalculator() {
         { label: '/', key: '/', color: '#b80000', col: 5 },
         { label: 'sqrt', key: 'sqrt', color: '#0047ff', col: 6 }
     ];
-    
+
     // Row 2
     const row2 = [
         { label: 'MR', key: 'MR', color: '#d46b00', col: 1 },
@@ -7018,7 +7081,7 @@ function initializeCalculator() {
         { label: '*', key: '*', color: '#b80000', col: 5 },
         { label: '%', key: '%', color: '#0047ff', col: 6 }
     ];
-    
+
     // Row 3
     const row3 = [
         { label: 'MS', key: 'MS', color: '#d46b00', col: 1 },
@@ -7028,7 +7091,7 @@ function initializeCalculator() {
         { label: '-', key: '-', color: '#b80000', col: 5 }
         // Column 6 is reserved for 1/x and = (handled separately)
     ];
-    
+
     // Row 4
     const row4 = [
         { label: 'M+', key: 'M+', color: '#d46b00', col: 1 },
@@ -7038,7 +7101,7 @@ function initializeCalculator() {
         { label: '+', key: '+', color: '#b80000', col: 5 }
         // Column 6 is reserved for = (handled separately)
     ];
-    
+
     // Helper function to create a standard button
     function createButton(btn, row) {
         const button = document.createElement('button');
@@ -7068,13 +7131,13 @@ function initializeCalculator() {
         });
         return button;
     }
-    
+
     // Add all standard buttons
     row1.forEach(btn => buttonsContainer.appendChild(createButton(btn, 1)));
     row2.forEach(btn => buttonsContainer.appendChild(createButton(btn, 2)));
     row3.forEach(btn => buttonsContainer.appendChild(createButton(btn, 3)));
     row4.forEach(btn => buttonsContainer.appendChild(createButton(btn, 4)));
-    
+
     // Create container for column 6 (rows 3-4) to hold both 1/x and =
     const col6Container = document.createElement('div');
     col6Container.style.cssText = `
@@ -7083,7 +7146,7 @@ function initializeCalculator() {
         position: relative;
         height: 71px;
     `;
-    
+
     // Add = button (tall, spans rows 3-4) - should be blue, not red
     const equalsBtn = document.createElement('button');
     equalsBtn.className = 'calc-btn';
@@ -7114,7 +7177,7 @@ function initializeCalculator() {
         handleCalculatorButton('=');
     });
     col6Container.appendChild(equalsBtn);
-    
+
     // Add 1/x button (small, on top of = button in row 3)
     const invBtn = document.createElement('button');
     invBtn.className = 'calc-btn';
@@ -7145,7 +7208,7 @@ function initializeCalculator() {
         handleCalculatorButton('1/x');
     });
     col6Container.appendChild(invBtn);
-    
+
     buttonsContainer.appendChild(col6Container);
 }
 
@@ -7153,14 +7216,14 @@ function handleCalculatorButton(key) {
     const display = document.getElementById('calc-display');
     const memDisplay = document.getElementById('calc-mem');
     if (!display) return;
-    
+
     const MAX_CHARS = 16;
-    
+
     const toNumber = (s) => {
         const n = Number(s);
         return Number.isFinite(n) ? n : 0;
     };
-    
+
     const setDisplay = (v) => {
         if (!Number.isFinite(v)) {
             display.value = 'Error';
@@ -7175,7 +7238,7 @@ function handleCalculatorButton(key) {
         s = s.replace(/\.0+$/, '').replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.$/, '');
         display.value = s;
     };
-    
+
     const pushDigit = (d) => {
         if (display.value === 'Error') setDisplay(0);
         if (calcState.overwrite) {
@@ -7185,7 +7248,7 @@ function handleCalculatorButton(key) {
         }
         if (display.value.length < MAX_CHARS) display.value += d;
     };
-    
+
     const pushDot = () => {
         if (calcState.overwrite) {
             display.value = '0.';
@@ -7194,19 +7257,19 @@ function handleCalculatorButton(key) {
         }
         if (!display.value.includes('.')) display.value += '.';
     };
-    
+
     const clearEntry = () => {
         setDisplay(0);
         calcState.overwrite = true;
     };
-    
+
     const clearAll = () => {
         calcState.acc = null;
         calcState.op = null;
         setDisplay(0);
         calcState.overwrite = true;
     };
-    
+
     const backspace = () => {
         if (!calcState.overwrite) {
             const raw = display.value;
@@ -7214,7 +7277,7 @@ function handleCalculatorButton(key) {
             display.value = next;
         }
     };
-    
+
     const compute = (a, b, sym) => {
         switch (sym) {
             case '+': return a + b;
@@ -7224,7 +7287,7 @@ function handleCalculatorButton(key) {
             default: return b;
         }
     };
-    
+
     const commitPending = (nextOp) => {
         const current = toNumber(display.value);
         if (calcState.acc === null) {
@@ -7236,7 +7299,7 @@ function handleCalculatorButton(key) {
         calcState.op = nextOp;
         calcState.overwrite = true;
     };
-    
+
     const equals = () => {
         if (calcState.op === null) return;
         const current = toNumber(display.value);
@@ -7246,7 +7309,7 @@ function handleCalculatorButton(key) {
         calcState.op = null;
         calcState.overwrite = true;
     };
-    
+
     const percent = () => {
         const base = calcState.acc === null ? 0 : calcState.acc;
         const x = toNumber(display.value);
@@ -7254,26 +7317,26 @@ function handleCalculatorButton(key) {
         setDisplay(result);
         calcState.overwrite = true;
     };
-    
+
     const invert = () => {
         const x = toNumber(display.value);
         setDisplay(x === 0 ? NaN : 1 / x);
         calcState.overwrite = true;
     };
-    
+
     const sqrt = () => {
         const x = toNumber(display.value);
         setDisplay(x < 0 ? NaN : Math.sqrt(x));
         calcState.overwrite = true;
     };
-    
+
     const negate = () => {
         if (display.value === '0' || display.value === 'Error') return;
         display.value = display.value.startsWith('-')
             ? display.value.slice(1)
             : '-' + display.value;
     };
-    
+
     const memory = (opcode) => {
         const x = toNumber(display.value);
         switch (opcode) {
@@ -7295,7 +7358,7 @@ function handleCalculatorButton(key) {
                 break;
         }
     };
-    
+
     // Handle button press
     if (/^\d$/.test(key)) {
         pushDigit(key);
@@ -7351,7 +7414,7 @@ function loadTestState(subject, testIndex) {
             timeAccommodations: fullState.timeAccommodations
         };
     }
-    
+
     // Fallback to legacy format
     try {
         if (!subject || testIndex === null || testIndex === undefined) {
@@ -7380,7 +7443,7 @@ let testExitWarningEnabled = false;
 function enableTestExitWarning() {
     if (testExitWarningEnabled) return;
     testExitWarningEnabled = true;
-    
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     console.log('⚠️ Test exit warning enabled');
 }
@@ -7388,7 +7451,7 @@ function enableTestExitWarning() {
 function disableTestExitWarning() {
     if (!testExitWarningEnabled) return;
     testExitWarningEnabled = false;
-    
+
     window.removeEventListener('beforeunload', handleBeforeUnload);
     console.log('✅ Test exit warning disabled');
 }
@@ -7429,14 +7492,14 @@ function loadSettings() {
             const settings = JSON.parse(saved);
             prometricDelay = settings.prometricDelay || false;
             timeAccommodations = settings.timeAccommodations || false;
-            
+
             const togglePrometric = document.getElementById('toggle-prometric-delay');
             const toggleTimeAccom = document.getElementById('toggle-time-accommodations');
-            
+
             if (togglePrometric) togglePrometric.checked = prometricDelay;
             if (toggleTimeAccom) toggleTimeAccom.checked = timeAccommodations;
         }
-        
+
         // Initialize button management UI
         initializeButtonManagement();
     } catch (e) {
@@ -7456,7 +7519,7 @@ function saveExamButtonConfig(config) {
         if (typeof window.updateReactExamButtons === 'function') {
             window.updateReactExamButtons();
         }
-        
+
         // Highlight button is now always available during exams (handled by React ExamEngine)
     } catch (e) {
         console.error('Failed to save button config:', e);
@@ -7581,7 +7644,7 @@ function createButtonManagementItem(key, label, config) {
     applyBtn.addEventListener('click', () => {
         const file = uploadInput.files[0];
         const useCustom = toggle.checked;
-        
+
         if (useCustom && file) {
             // New image uploaded
             const reader = new FileReader();
@@ -7597,13 +7660,13 @@ function createButtonManagementItem(key, label, config) {
                 config.image = imageData;
                 config.useCustom = true;
                 updateButtonPreview(preview, imageData, true, label);
-                
+
                 // CRITICAL: Force immediate update of all exam buttons
                 console.log('Force refreshing all exam buttons after upload');
                 applyExamButtonTheme();
                 // Trigger React component updates
                 window.dispatchEvent(new Event('buttonThemeUpdated'));
-                
+
                 alert(`${label} button updated successfully!`);
             };
             reader.readAsDataURL(file);
@@ -7616,13 +7679,13 @@ function createButtonManagementItem(key, label, config) {
             };
             saveExamButtonConfig(currentConfig);
             updateButtonPreview(preview, config.image, true, label);
-            
+
             // CRITICAL: Force immediate update of all exam buttons
             console.log('Force refreshing all exam buttons after enabling');
             applyExamButtonTheme();
             // Trigger React component updates
             window.dispatchEvent(new Event('buttonThemeUpdated'));
-            
+
             alert(`${label} button updated successfully!`);
         } else if (!useCustom) {
             // Disable custom image
@@ -7634,13 +7697,13 @@ function createButtonManagementItem(key, label, config) {
             saveExamButtonConfig(currentConfig);
             config.useCustom = false;
             updateButtonPreview(preview, config.image, false, label);
-            
+
             // CRITICAL: Force immediate update of all exam buttons
             console.log('Force refreshing all exam buttons after disabling');
             applyExamButtonTheme();
             // Trigger React component updates
             window.dispatchEvent(new Event('buttonThemeUpdated'));
-            
+
             alert(`${label} button reset to default!`);
         } else {
             alert('Please upload an image first.');
@@ -7658,13 +7721,13 @@ function createButtonManagementItem(key, label, config) {
         toggle.checked = false;
         uploadInput.value = '';
         updateButtonPreview(preview, null, false, label);
-        
+
         // CRITICAL: Force immediate update of all exam buttons
         console.log('Force refreshing all exam buttons after reset');
         applyExamButtonTheme();
         // Trigger React component updates
         window.dispatchEvent(new Event('buttonThemeUpdated'));
-        
+
         alert(`${label} button reset to default!`);
     });
 
@@ -7688,7 +7751,7 @@ function createHighlightButtonManagementItem(key, label, config) {
     // Ensure config has all properties
     if (config.hidden === undefined) config.hidden = false;
     if (config.useImage === undefined) config.useImage = true;
-    
+
     const isHidden = config.hidden === true;
     const useCustom = config.useCustom === true;
     const useImage = config.useImage !== false;
@@ -7795,7 +7858,7 @@ function createHighlightButtonManagementItem(key, label, config) {
         const file = uploadInput.files[0];
         const useCustom = toggle.checked;
         const useImage = modeToggle.checked;
-        
+
         if (file && useCustom) {
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -7838,22 +7901,22 @@ function createHighlightButtonManagementItem(key, label, config) {
     removeBtn.addEventListener('click', () => {
         const currentConfig = getStoredExamButtonConfig();
         const newHiddenState = !config.hidden;
-        
+
         currentConfig[key] = {
             ...config,
             hidden: newHiddenState
         };
-        
+
         config.hidden = newHiddenState;
         saveExamButtonConfig(currentConfig);
-        
+
         uploadInput.disabled = newHiddenState;
         toggle.disabled = newHiddenState;
         modeToggle.disabled = newHiddenState || !toggle.checked;
         applyBtn.disabled = newHiddenState;
         removeBtn.textContent = newHiddenState ? 'Show' : 'Remove';
         removeBtn.className = `px-4 py-2 ${newHiddenState ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white text-sm rounded`;
-        
+
         updateHighlightPreview();
         window.dispatchEvent(new Event('buttonThemeUpdated'));
         alert(`Highlight button ${newHiddenState ? 'removed' : 'shown'} successfully!`);
@@ -7868,12 +7931,12 @@ function createHighlightButtonManagementItem(key, label, config) {
             hidden: false
         };
         saveExamButtonConfig(currentConfig);
-        
+
         config.image = null;
         config.useCustom = false;
         config.useImage = true;
         config.hidden = false;
-        
+
         toggle.checked = false;
         modeToggle.checked = true;
         modeToggle.disabled = true;
@@ -7883,7 +7946,7 @@ function createHighlightButtonManagementItem(key, label, config) {
         applyBtn.disabled = false;
         removeBtn.textContent = 'Remove';
         removeBtn.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded';
-        
+
         updateHighlightPreview();
         window.dispatchEvent(new Event('buttonThemeUpdated'));
         alert('Highlight button reset to default!');
@@ -8026,211 +8089,211 @@ function showPreviousTests(event) {
 
 // --- React Dashboard Component ---
 const subjects = [
-  { name: 'Biology', icon: 'Dna', description: '', duration: '30 minutes per test', color: 'text-blue-800', bgColor: 'bg-blue-100' },
-  { name: 'General Chemistry', icon: 'FlaskConical', description: '', duration: '30 minutes per test', color: 'text-cyan-500', bgColor: 'bg-cyan-100' },
-  { name: 'Organic Chemistry', icon: 'Atom', description: '', duration: '30 minutes per test', color: 'text-orange-600', bgColor: 'bg-orange-100' },
-  { name: 'Reading Comprehension', icon: 'BookOpen', description: '', duration: '60 minutes per test', color: 'text-green-800', bgColor: 'bg-green-100' },
-  { name: 'Physics', icon: 'Rocket', description: '', duration: '50 minutes per test', color: 'text-purple-700', bgColor: 'bg-purple-100' },
-  { name: 'Quantitative Reasoning', icon: 'Calculator', description: '', duration: '45 minutes per test', color: 'text-red-700', bgColor: 'bg-red-100' }
+    { name: 'Biology', icon: 'Dna', description: '', duration: '30 minutes per test', color: 'text-blue-800', bgColor: 'bg-blue-100' },
+    { name: 'General Chemistry', icon: 'FlaskConical', description: '', duration: '30 minutes per test', color: 'text-cyan-500', bgColor: 'bg-cyan-100' },
+    { name: 'Organic Chemistry', icon: 'Atom', description: '', duration: '30 minutes per test', color: 'text-orange-600', bgColor: 'bg-orange-100' },
+    { name: 'Reading Comprehension', icon: 'BookOpen', description: '', duration: '60 minutes per test', color: 'text-green-800', bgColor: 'bg-green-100' },
+    { name: 'Physics', icon: 'Rocket', description: '', duration: '50 minutes per test', color: 'text-purple-700', bgColor: 'bg-purple-100' },
+    { name: 'Quantitative Reasoning', icon: 'Calculator', description: '', duration: '45 minutes per test', color: 'text-red-700', bgColor: 'bg-red-100' }
 ];
 
 // Lucide icon helper - returns a React element that Lucide will upgrade
 const createLucideIcon = (iconName, props = {}) =>
-  React.createElement('i', Object.assign({}, props, {
-    'data-lucide': iconName,
-    'aria-hidden': 'true'
-  }));
+    React.createElement('i', Object.assign({}, props, {
+        'data-lucide': iconName,
+        'aria-hidden': 'true'
+    }));
 
 const lucideIconNameMap = {
-  Dna: 'dna',
-  FlaskConical: 'flask-conical',
-  Atom: 'atom',
-  BookOpen: 'book-open',
-  Rocket: 'rocket',
-  Calculator: 'calculator',
-  ArrowRight: 'arrow-right',
-  CheckCircle: 'check-circle',
-  Home: 'home',
-  Clock: 'clock',
-  Tag: 'tag',
-  ChevronLeft: 'chevron-left',
-  ChevronDown: 'chevron-down',
-  GraduationCap: 'graduation-cap',
-  ClipboardList: 'clipboard-list',
-  Eye: 'eye'
+    Dna: 'dna',
+    FlaskConical: 'flask-conical',
+    Atom: 'atom',
+    BookOpen: 'book-open',
+    Rocket: 'rocket',
+    Calculator: 'calculator',
+    ArrowRight: 'arrow-right',
+    CheckCircle: 'check-circle',
+    Home: 'home',
+    Clock: 'clock',
+    Tag: 'tag',
+    ChevronLeft: 'chevron-left',
+    ChevronDown: 'chevron-down',
+    GraduationCap: 'graduation-cap',
+    ClipboardList: 'clipboard-list',
+    Eye: 'eye'
 };
 
 const getLucideIcon = (iconKey, props) => {
-  const lucideName = lucideIconNameMap[iconKey];
-  return lucideName ? createLucideIcon(lucideName, props) : null;
+    const lucideName = lucideIconNameMap[iconKey];
+    return lucideName ? createLucideIcon(lucideName, props) : null;
 };
 
 const SubjectCard = ({ subject }) => {
-  // Map Tailwind color classes to actual border colors for hover effect
-  const getBorderColor = (colorClass) => {
-    const colorMap = {
-      'text-blue-800': 'border-blue-800',
-      'text-cyan-500': 'border-cyan-500',
-      'text-orange-600': 'border-orange-600',
-      'text-green-800': 'border-green-800',
-      'text-purple-700': 'border-purple-700',
-      'text-red-700': 'border-red-700'
+    // Map Tailwind color classes to actual border colors for hover effect
+    const getBorderColor = (colorClass) => {
+        const colorMap = {
+            'text-blue-800': 'border-blue-800',
+            'text-cyan-500': 'border-cyan-500',
+            'text-orange-600': 'border-orange-600',
+            'text-green-800': 'border-green-800',
+            'text-purple-700': 'border-purple-700',
+            'text-red-700': 'border-red-700'
+        };
+        return colorMap[colorClass] || 'border-gray-900';
     };
-    return colorMap[colorClass] || 'border-gray-900';
-  };
 
-  return React.createElement('div', {
-    className: `relative p-6 md:p-8 rounded-3xl shadow-2xl transition-all duration-300 ease-in-out hover:shadow-3xl hover:scale-[1.02] cursor-pointer bg-white group h-full flex flex-col justify-between`,
-    style: { border: '4px solid #111827' },
-    role: 'link',
-    'aria-label': `Start ${subject.name} practice`,
-    onClick: () => showSubject(subject.name)
-  }, [
-    React.createElement('div', null, [
-      React.createElement('div', { className: 'flex items-start justify-between mb-4' }, [
-        React.createElement('div', { className: `p-3 rounded-full ${subject.bgColor}` },
-          getLucideIcon(subject.icon, { className: `${subject.color} w-8 h-8` })
-        ),
-        getLucideIcon('ArrowRight', { className: 'w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors' })
-      ]),
-      React.createElement('h3', { className: `text-xl md:text-2xl font-extrabold mb-2 leading-tight ${subject.color}` }, subject.name),
-      React.createElement('p', { className: 'text-sm text-gray-600 mb-4' }, subject.description)
-    ]),
-    React.createElement('div', { className: 'flex items-center text-sm font-medium text-gray-500 mt-4 pt-4 border-t border-gray-200' }, [
-      getLucideIcon('CheckCircle', { className: 'w-4 h-4 mr-2 text-gray-400' }),
-      React.createElement('span', null, subject.duration)
-    ]),
-    React.createElement('div', { 
-      className: `absolute inset-0 rounded-3xl border-4 border-transparent group-hover:border-4 ${getBorderColor(subject.color)} transition-all duration-300 pointer-events-none` 
-    })
-  ]);
+    return React.createElement('div', {
+        className: `relative p-6 md:p-8 rounded-3xl shadow-2xl transition-all duration-300 ease-in-out hover:shadow-3xl hover:scale-[1.02] cursor-pointer bg-white group h-full flex flex-col justify-between`,
+        style: { border: '4px solid #111827' },
+        role: 'link',
+        'aria-label': `Start ${subject.name} practice`,
+        onClick: () => showSubject(subject.name)
+    }, [
+        React.createElement('div', null, [
+            React.createElement('div', { className: 'flex items-start justify-between mb-4' }, [
+                React.createElement('div', { className: `p-3 rounded-full ${subject.bgColor}` },
+                    getLucideIcon(subject.icon, { className: `${subject.color} w-8 h-8` })
+                ),
+                getLucideIcon('ArrowRight', { className: 'w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors' })
+            ]),
+            React.createElement('h3', { className: `text-xl md:text-2xl font-extrabold mb-2 leading-tight ${subject.color}` }, subject.name),
+            React.createElement('p', { className: 'text-sm text-gray-600 mb-4' }, subject.description)
+        ]),
+        React.createElement('div', { className: 'flex items-center text-sm font-medium text-gray-500 mt-4 pt-4 border-t border-gray-200' }, [
+            getLucideIcon('CheckCircle', { className: 'w-4 h-4 mr-2 text-gray-400' }),
+            React.createElement('span', null, subject.duration)
+        ]),
+        React.createElement('div', {
+            className: `absolute inset-0 rounded-3xl border-4 border-transparent group-hover:border-4 ${getBorderColor(subject.color)} transition-all duration-300 pointer-events-none`
+        })
+    ]);
 };
 
 const App = () => {
-  const bubblyPattern = "data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23514a84' fill-opacity='0.2' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E";
+    const bubblyPattern = "data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23514a84' fill-opacity='0.2' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E";
 
-  return React.createElement('div', {
-    className: 'min-h-screen',
-    style: {
-      fontFamily: 'Inter, sans-serif',
-      backgroundColor: '#282a5c'
-    }
-  }, [
-    // Full-width header banner - independent of sidebar, always 100vw
-    React.createElement('div', {
-      className: 'dashboard-hero text-center py-10 md:py-16 relative',
-      style: {
-        position: 'relative',
-        width: '100vw',
-        left: '0',
-        right: '0',
-        backgroundColor: '#282a5c',
-        backgroundImage: `url("${bubblyPattern}")`,
-        backgroundSize: '40px 40px',
-        '--hero-pattern': `url("${bubblyPattern}")`,
-        marginLeft: 'calc(-50vw + 50%)',
-        marginRight: 'calc(-50vw + 50%)'
-      }
-    }, [
-      // Centered content inside full-width banner
-      React.createElement('div', {
-        className: 'max-w-6xl mx-auto px-4',
+    return React.createElement('div', {
+        className: 'min-h-screen',
         style: {
-          position: 'relative',
-          zIndex: 1
+            fontFamily: 'Inter, sans-serif',
+            backgroundColor: '#282a5c'
         }
-      }, [
-        React.createElement('h1', {
-          className: 'text-5xl sm:text-6xl md:text-7xl font-black leading-none drop-shadow-lg mb-4'
+    }, [
+        // Full-width header banner - independent of sidebar, always 100vw
+        React.createElement('div', {
+            className: 'dashboard-hero text-center py-10 md:py-16 relative',
+            style: {
+                position: 'relative',
+                width: '100vw',
+                left: '0',
+                right: '0',
+                backgroundColor: '#282a5c',
+                backgroundImage: `url("${bubblyPattern}")`,
+                backgroundSize: '40px 40px',
+                '--hero-pattern': `url("${bubblyPattern}")`,
+                marginLeft: 'calc(-50vw + 50%)',
+                marginRight: 'calc(-50vw + 50%)'
+            }
         }, [
-          React.createElement('span', { style: { color: '#60A5FA' } }, 'Opto'),
-          React.createElement('span', { style: { color: '#ffffff' } }, 'future'),
-          React.createElement('span', { style: { color: '#60A5FA' } }, 'prep')
+            // Centered content inside full-width banner
+            React.createElement('div', {
+                className: 'max-w-6xl mx-auto px-4',
+                style: {
+                    position: 'relative',
+                    zIndex: 1
+                }
+            }, [
+                React.createElement('h1', {
+                    className: 'text-5xl sm:text-6xl md:text-7xl font-black leading-none drop-shadow-lg mb-4'
+                }, [
+                    React.createElement('span', { style: { color: '#60A5FA' } }, 'Opto'),
+                    React.createElement('span', { style: { color: '#ffffff' } }, 'future'),
+                    React.createElement('span', { style: { color: '#60A5FA' } }, 'prep')
+                ]),
+                React.createElement('p', {
+                    className: 'text-lg sm:text-xl font-medium flex items-center justify-center space-x-2',
+                    style: { color: '#60A5FA' }
+                }, [
+                    React.createElement('span', { className: 'text-2xl' }, '🚀'),
+                    React.createElement('span', null, 'Comprehensive OAT Exams.'),
+                    React.createElement('span', { className: 'text-2xl' }, '🎯')
+                ])
+            ])
         ]),
-        React.createElement('p', {
-          className: 'text-lg sm:text-xl font-medium flex items-center justify-center space-x-2',
-          style: { color: '#60A5FA' }
+
+        // Centered Subject Grid Container - below header banner
+        React.createElement('div', {
+            className: 'flex-1 w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 pb-16',
+            style: {
+                width: '100%'
+            }
         }, [
-          React.createElement('span', { className: 'text-2xl' }, '🚀'),
-          React.createElement('span', null, 'Comprehensive OAT Exams.'),
-          React.createElement('span', { className: 'text-2xl' }, '🎯')
+            React.createElement('div', {
+                className: 'bg-white rounded-3xl border-4 border-gray-900 p-6 md:p-10 shadow-2xl max-w-7xl mx-auto',
+                style: {
+                    border: '4px solid #111827'
+                }
+            }, [
+                React.createElement('h2', {
+                    className: 'text-2xl font-bold text-gray-900 mb-8 text-center'
+                }, 'Choose Your Subject Practice Area'),
+
+                React.createElement('main', {
+                    className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10'
+                }, subjects.map((subject) =>
+                    React.createElement(SubjectCard, { key: `subject-card-${subject.name}`, subject: subject })
+                ))
+            ])
         ])
-      ])
-    ]),
-
-    // Centered Subject Grid Container - below header banner
-    React.createElement('div', {
-      className: 'flex-1 w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 pb-16',
-      style: {
-        width: '100%'
-      }
-    }, [
-      React.createElement('div', {
-        className: 'bg-white rounded-3xl border-4 border-gray-900 p-6 md:p-10 shadow-2xl max-w-7xl mx-auto',
-        style: {
-          border: '4px solid #111827'
-        }
-      }, [
-        React.createElement('h2', {
-          className: 'text-2xl font-bold text-gray-900 mb-8 text-center'
-        }, 'Choose Your Subject Practice Area'),
-
-        React.createElement('main', {
-          className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10'
-        }, subjects.map((subject) =>
-          React.createElement(SubjectCard, { key: `subject-card-${subject.name}`, subject: subject })
-        ))
-      ])
-    ])
-  ]);
+    ]);
 };
 
 // Initialize React when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  const rootElement = document.getElementById('dashboard-react-root');
-  if (rootElement) {
-    const root = ReactDOM.createRoot(rootElement);
-    root.render(React.createElement(App));
-    
-    // Set dashboard-active class on body if dashboard is visible by default
-    const dashboardView = document.getElementById('dashboard-view');
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('main-content');
-    
-    if (dashboardView) {
-      const isVisible = dashboardView.style.display !== 'none' && 
-                       window.getComputedStyle(dashboardView).display !== 'none';
-      
-      if (isVisible) {
-        document.body.classList.add('dashboard-active');
-        // Show sidebar for dashboard (not hidden like before)
-        if (sidebar) {
-          sidebar.style.display = 'flex';
-        }
-        if (mainContent) {
-          // Sidebar overlays, so main-content is full width
-          mainContent.style.marginLeft = '0';
-          mainContent.style.width = '100%';
+    const rootElement = document.getElementById('dashboard-react-root');
+    if (rootElement) {
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(React.createElement(App));
+
+        // Set dashboard-active class on body if dashboard is visible by default
+        const dashboardView = document.getElementById('dashboard-view');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+
+        if (dashboardView) {
+            const isVisible = dashboardView.style.display !== 'none' &&
+                window.getComputedStyle(dashboardView).display !== 'none';
+
+            if (isVisible) {
+                document.body.classList.add('dashboard-active');
+                // Show sidebar for dashboard (not hidden like before)
+                if (sidebar) {
+                    sidebar.style.display = 'flex';
+                }
+                if (mainContent) {
+                    // Sidebar overlays, so main-content is full width
+                    mainContent.style.marginLeft = '0';
+                    mainContent.style.width = '100%';
+                }
+
+                updateDashboardOffset();
+            }
         }
 
-        updateDashboardOffset();
-      }
+        // Initialize Lucide icons for sidebar and React content
+        setTimeout(() => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }, 100);
+
+        // Also initialize icons after a longer delay to ensure everything is rendered
+        setTimeout(() => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }, 500);
     }
-    
-    // Initialize Lucide icons for sidebar and React content
-    setTimeout(() => {
-      if (window.lucide) {
-        lucide.createIcons();
-      }
-    }, 100);
-    
-    // Also initialize icons after a longer delay to ensure everything is rendered
-    setTimeout(() => {
-      if (window.lucide) {
-        lucide.createIcons();
-      }
-    }, 500);
-  }
 });
 
 window.addEventListener('resize', updateDashboardOffset);
@@ -8244,7 +8307,7 @@ function initializeSubjectPagesReact(subjectName) {
         console.warn('React initialization already in progress, skipping duplicate call');
         return;
     }
-    
+
     // Check if reset is in progress - skip initialization if so
     try {
         if (sessionStorage.getItem('reset-in-progress') === 'true') {
@@ -8254,22 +8317,22 @@ function initializeSubjectPagesReact(subjectName) {
     } catch (e) {
         // Ignore if sessionStorage not available
     }
-    
+
     const rootElement = document.getElementById('subject-pages-react-root');
     if (!rootElement) {
         console.error('subject-pages-react-root element not found');
         return;
     }
-    
+
     // Verify element is still in DOM
     if (!rootElement.parentNode || !rootElement.isConnected) {
         console.warn('Root element is not in DOM, skipping initialization');
         return;
     }
-    
+
     // Set flag to prevent concurrent initializations
     isInitializingReact = true;
-    
+
     // Wait for SubjectPagesApp to be available (Babel might still be transpiling)
     const tryInitialize = (attempts = 0) => {
         // Check if React and ReactDOM are available
@@ -8283,7 +8346,7 @@ function initializeSubjectPagesReact(subjectName) {
                 return;
             }
         }
-        
+
         if (window.SubjectPagesApp && typeof window.SubjectPagesApp === 'function') {
             try {
                 // Verify element is still in DOM before proceeding
@@ -8292,29 +8355,29 @@ function initializeSubjectPagesReact(subjectName) {
                     isInitializingReact = false;
                     return;
                 }
-                
+
                 // Handle existing React root - try to reuse it first
                 // Don't clear the reference yet - we'll check if we can reuse it
-                
+
                 // Proceed with render - the proceedWithRender function will handle root reuse
                 proceedWithRender();
-                
+
                 function proceedWithRender() {
                     // Double-check element is still in DOM before rendering
                     if (!rootElement.parentNode || !rootElement.isConnected) {
                         console.warn('Root element removed during cleanup, aborting render');
                         return;
                     }
-                    
+
                     try {
                         // Try to reuse existing root first (safest approach)
                         let root = rootElement._reactRoot;
-                        
+
                         // Also check for React's internal root markers
-                        const hasReactRoot = Object.keys(rootElement).some(key => 
+                        const hasReactRoot = Object.keys(rootElement).some(key =>
                             key.startsWith('__reactFiber') || key.startsWith('__reactContainer')
                         );
-                        
+
                         // Check if existing root is valid and can be reused
                         if (root && typeof root.render === 'function') {
                             try {
@@ -8327,12 +8390,12 @@ function initializeSubjectPagesReact(subjectName) {
                             } catch (renderError) {
                                 // Check if this is a NotFoundError or removeChild error
                                 const isRemoveChildError = renderError.message && (
-                                    renderError.message.includes('removeChild') || 
+                                    renderError.message.includes('removeChild') ||
                                     renderError.message.includes('Failed to execute \'removeChild\'') ||
                                     renderError.message.includes('not a child') ||
                                     renderError.name === 'NotFoundError'
                                 ) || renderError.name === 'NotFoundError';
-                                
+
                                 if (isRemoveChildError) {
                                     // Suppress removeChild errors - these are harmless React cleanup issues
                                     console.warn('React cleanup error (harmless, suppressed):', renderError.message || renderError);
@@ -8378,15 +8441,15 @@ function initializeSubjectPagesReact(subjectName) {
                                 return;
                             }
                         }
-                        
+
                         // Create new root only if we don't have a valid one
                         if (!root) {
                             // Check if React has already created a root for this element
                             // React 18 stores root internally, so we need to check differently
-                            const reactInternalKey = Object.keys(rootElement).find(key => 
+                            const reactInternalKey = Object.keys(rootElement).find(key =>
                                 key.startsWith('__reactFiber') || key.startsWith('__reactContainer')
                             );
-                            
+
                             // If React already has a root, try to use it instead of creating a new one
                             if (reactInternalKey) {
                                 console.warn('React root already exists on element, attempting to render directly');
@@ -8404,7 +8467,7 @@ function initializeSubjectPagesReact(subjectName) {
                                     console.warn('Failed to render with existing root, will try to create new one:', e.message);
                                 }
                             }
-                            
+
                             // No React root exists - safe to create one
                             try {
                                 // Double-check element is still in DOM before creating root
@@ -8413,17 +8476,17 @@ function initializeSubjectPagesReact(subjectName) {
                                     isInitializingReact = false;
                                     return;
                                 }
-                                
+
                                 // Verify ReactDOM is available
                                 if (typeof ReactDOM === 'undefined' || !ReactDOM.createRoot) {
                                     console.error('ReactDOM.createRoot is not available');
                                     isInitializingReact = false;
                                     return;
                                 }
-                                
+
                                 // Clear the old root reference
                                 rootElement._reactRoot = null;
-                                
+
                                 // Before creating root, clear any existing content safely
                                 // This prevents React from trying to remove non-existent nodes
                                 try {
@@ -8452,11 +8515,11 @@ function initializeSubjectPagesReact(subjectName) {
                                     // Ignore errors during clearing - React will handle it
                                     console.warn('Error clearing root element (ignored):', clearError.message);
                                 }
-                                
+
                                 // Create new root - React 18 will handle cleanup automatically
                                 root = ReactDOM.createRoot(rootElement);
                                 rootElement._reactRoot = root;
-                                
+
                                 try {
                                     root.render(React.createElement(window.SubjectPagesApp, { activeSubject: subjectName }));
                                     isInitializingReact = false;
@@ -8464,12 +8527,12 @@ function initializeSubjectPagesReact(subjectName) {
                                     // Check for NotFoundError or removeChild errors
                                     const isRemoveChildError = (
                                         renderError.message && (
-                                            renderError.message.includes('removeChild') || 
+                                            renderError.message.includes('removeChild') ||
                                             renderError.message.includes('Failed to execute \'removeChild\'') ||
                                             renderError.message.includes('not a child')
                                         )
                                     ) || renderError.name === 'NotFoundError';
-                                    
+
                                     if (isRemoveChildError) {
                                         // Suppress removeChild errors during initial render
                                         console.warn('React cleanup error during initial render (harmless, suppressed):', renderError.message || renderError);
@@ -8487,9 +8550,9 @@ function initializeSubjectPagesReact(subjectName) {
                                     createError.message.includes('already has a root') ||
                                     createError.message.includes('root already exists')
                                 );
-                                const isNotFoundError = createError.name === 'NotFoundError' || 
+                                const isNotFoundError = createError.name === 'NotFoundError' ||
                                     (createError.message && createError.message.includes('NotFoundError'));
-                                
+
                                 if (isAlreadyHasRoot || isNotFoundError) {
                                     // Element already has a root or there's a DOM issue
                                     console.warn('Cannot create React root (already exists or DOM issue), attempting direct render');
@@ -8519,7 +8582,7 @@ function initializeSubjectPagesReact(subjectName) {
                                 }
                             }
                         }
-                        
+
                         // Initialize Lucide icons after render - wait for React to render
                         setTimeout(() => {
                             if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -8530,7 +8593,7 @@ function initializeSubjectPagesReact(subjectName) {
                                 }
                             }
                         }, 300);
-                        
+
                         // Also initialize after React has fully rendered
                         setTimeout(() => {
                             if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -8541,18 +8604,18 @@ function initializeSubjectPagesReact(subjectName) {
                                 }
                             }
                         }, 600);
-                        
+
                         console.log('SubjectPagesApp initialized for:', subjectName);
                     } catch (renderError) {
                         // Check for NotFoundError or removeChild errors
                         const isRemoveChildError = (
                             renderError.message && (
-                                renderError.message.includes('removeChild') || 
+                                renderError.message.includes('removeChild') ||
                                 renderError.message.includes('Failed to execute \'removeChild\'') ||
                                 renderError.message.includes('not a child')
                             )
                         ) || renderError.name === 'NotFoundError';
-                        
+
                         if (isRemoveChildError) {
                             // Suppress removeChild errors - these are harmless React cleanup issues
                             console.warn('React cleanup error during render (harmless, suppressed):', renderError.message || renderError);
@@ -8578,7 +8641,7 @@ function initializeSubjectPagesReact(subjectName) {
             isInitializingReact = false;
         }
     };
-    
+
     // Start initialization
     tryInitialize();
 }
@@ -8587,7 +8650,7 @@ function initializeSubjectPagesReact(subjectName) {
 if (typeof window !== 'undefined') {
     window.startPreTest = startPreTest;
     window.allTestData = allTestData;
-    
+
     // Verify General Chemistry data is loaded
     console.log(' Script.js: Checking GeneralChemistryExamData:', typeof window.GeneralChemistryExamData !== 'undefined' ? 'LOADED' : 'NOT LOADED');
     if (typeof window.GeneralChemistryExamData !== 'undefined') {
