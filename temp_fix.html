@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Temp Fix</title>
+</head>
+<body>
+    <script type="text/babel">
+        // Add auth UI to the page
+        (function () {
+            const { useState, useEffect } = React;
+            const ADMIN_EMAIL = 'optofutureprep@gmail.com';
+            const REGISTERED_USERS_KEY = 'registered_users_list';
+            const SUPPORT_MESSAGES_KEY = 'support_messages_list';
+            const ANNOUNCEMENTS_KEY = 'admin_announcements_list';
+
+            const normalizeEmail = (email = '') => email.trim().toLowerCase();
+
+            function loadRegisteredUsers() {
+                try {
+                    const stored = localStorage.getItem(REGISTERED_USERS_KEY);
+                    return stored
+                        ? JSON.parse(stored).map((record) => ({
+                            ...record,
+                            banned: !!record.banned,
+                            bannedAt: record.bannedAt || null,
+                        }))
+                        : [];
+                } catch (error) {
+                    console.warn('Failed to load registered users:', error);
+                    return [];
+                }
+            }
+
+            function saveRegisteredUsers(users) {
+                try {
+                    localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
+                } catch (error) {
+                    console.warn('Failed to save registered users:', error);
+                }
+            }
+
+            function upsertRegisteredUserRecord(user) {
+                const normalizedEmail = normalizeEmail(user?.email);
+                if (!normalizedEmail) {
+                    return loadRegisteredUsers();
+                }
+
+                const existing = loadRegisteredUsers();
+                const timestamp = new Date().toISOString();
+                let alreadyExists = false;
+
+                const updated = existing.map((record) => {
+                    if (normalizeEmail(record.email) === normalizedEmail) {
+                        alreadyExists = true;
+                        return {
+                            ...record,
+                            userId: user?.id || record.userId,
+                            lastLoginAt: timestamp,
+                            createdAt: record.createdAt || user?.createdAt || timestamp,
+                            banned: record?.banned || false,
+                            bannedAt: record?.bannedAt || null,
+                        };
+                    }
+                    return record;
+                });
+
+                if (!alreadyExists) {
+                    updated.push({
+                        userId: user?.id || `user_${Date.now()}`,
+                        email: user?.email,
+                        createdAt: user?.createdAt || timestamp,
+                        lastLoginAt: timestamp,
+                        banned: false,
+                        bannedAt: null,
+                    });
+                }
+
+                saveRegisteredUsers(updated);
+                return updated;
+            }
+
+            function loadSupportMessages() {
+                try {
+                    const stored = localStorage.getItem(SUPPORT_MESSAGES_KEY);
+                    return stored ? JSON.parse(stored) : [];
+                } catch (error) {
+                    console.warn('Failed to load support messages:', error);
+                    return [];
+                }
+            }
+
+            function saveSupportMessages(messages) {
+                try {
+                    localStorage.setItem(SUPPORT_MESSAGES_KEY, JSON.stringify(messages));
+                } catch (error) {
+                    console.warn('Failed to save support messages:', error);
+                }
+            }
+
+            function addSupportMessage(message) {
+                const messages = loadSupportMessages();
+                const entry = {
+                    id: `support_${Date.now()}`,
+                    ...message,
+                    createdAt: new Date().toISOString(),
+                    status: 'open',
+                    replies: []
+                };
+                const updated = [entry, ...messages];
+                saveSupportMessages(updated);
+                return updated;
+            }
+
+            function addSupportReply(messageId, reply) {
+                const messages = loadSupportMessages();
+                const messageIndex = messages.findIndex(msg => msg.id === messageId);
+                if (messageIndex === -1) return messages;
+
+                messages[messageIndex].replies = messages[messageIndex].replies || [];
+                messages[messageIndex].replies.push({
+                    id: `reply_${Date.now()}`,
+                    message: reply.message,
+                    from: 'admin',
+                    createdAt: new Date().toISOString()
+                });
+                messages[messageIndex].status = 'replied';
+                messages[messageIndex].repliedAt = new Date().toISOString();
+
+                saveSupportMessages(messages);
+                return messages;
+            }
+
+            function loadAnnouncements() {
+                try {
+                    const stored = localStorage.getItem(ANNOUNCEMENTS_KEY);
+                    return stored ? JSON.parse(stored) : [];
+                } catch (error) {
+                    console.warn('Failed to load announcements:', error);
+                    return [];
+                }
+            }
+
+            function saveAnnouncements(list) {
+                try {
+                    localStorage.setItem(ANNOUNCEMENTS_KEY, JSON.stringify(list));
+                } catch (error) {
+                    console.warn('Failed to save announcements:', error);
+                }
+            }
+
+            function addAnnouncement(data) {
+                const announcements = loadAnnouncements();
+                const entry = {
+                    id: `announcement_${Date.now()}`,
+                    title: data.title?.trim() || 'Announcement',
+                    message: data.message?.trim() || '',
+                    createdAt: new Date().toISOString()
+                };
+                const updated = [entry, ...announcements];
+                saveAnnouncements(updated);
+                return updated;
+            }
+
+            function setUserBanStatus(email, isBanned) {
+                const normalizedEmail = normalizeEmail(email);
+                if (!normalizedEmail) {
+                    return loadRegisteredUsers();
+                }
+
+                const timestamp = new Date().toISOString();
+                const updated = loadRegisteredUsers().map((record) => {
+                    if (normalizeEmail(record.email) === normalizedEmail) {
+                        return {
+                            ...record,
+                            banned: isBanned,
+                            bannedAt: isBanned ? timestamp : null,
+                        };
+                    }
+                    return record;
+                });
+
+                saveRegisteredUsers(updated);
+                return updated;
+            }
+
+            function isUserBanned(email) {
+                const record = findRegisteredUserByEmail(email);
+                return !!record?.banned;
+            }
+
+            function removeRegisteredUserByEmail(email) {
+                const normalizedEmail = normalizeEmail(email);
+                if (!normalizedEmail) {
+                    return loadRegisteredUsers();
+                }
+                const updated = loadRegisteredUsers().filter((record) => normalizeEmail(record.email) !== normalizedEmail);
+                saveRegisteredUsers(updated);
+                return updated;
+            }
+
+            function getSavedUser() {
+                try {
+                    const savedUser = localStorage.getItem('app_user');
+                    return savedUser ? JSON.parse(savedUser) : null;
+                } catch (error) {
+                    console.warn('Failed to parse saved user:', error);
+                    return null;
+                }
+            }
+
+            function isAdminUser(user) {
+                if (!user?.email) {
+                    return false;
+                }
+                return normalizeEmail(user.email) === normalizeEmail(ADMIN_EMAIL);
+            }
+
+            function formatDateTime(value) {
+                if (!value) {
+                    return '—';
+                }
+                try {
+                    const date = new Date(value);
+                    return date.toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit'
+                    });
+                } catch (error) {
+                    return value;
+                }
+            }
+
+            function findRegisteredUserByEmail(email) {
+                const normalized = normalizeEmail(email);
+                if (!normalized) {
+                    return null;
+                }
+                const users = loadRegisteredUsers();
+                return users.find((user) => normalizeEmail(user.email) === normalized) || null;
+            }
+
+            // AuthUI component and other React components would go here...
+            // For now, just create a minimal working structure
+
+            const renderAuthUI = () => {
+                const container = document.getElementById('auth-ui-root');
+                if (!container) {
+                    console.error('Auth UI container not found');
+                    return;
+                }
+
+                try {
+                    if (window.React && window.ReactDOM) {
+                        const root = window.ReactDOM.createRoot ? 
+                            window.ReactDOM.createRoot(container) : null;
+                        
+                        if (root) {
+                            root.render("Auth UI Loading...");
+                        } else if (window.ReactDOM.render) {
+                            window.ReactDOM.render("Auth UI Loading...", container);
+                        } else {
+                            console.error('ReactDOM is not available');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error rendering AuthUI:', error);
+                }
+            };
+
+            // Start rendering after a delay to ensure everything is loaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(renderAuthUI, 500);
+                });
+            } else {
+                setTimeout(renderAuthUI, 500);
+            }
+        })();
+    </script>
+</body>
+</html>
